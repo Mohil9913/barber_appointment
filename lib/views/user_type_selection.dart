@@ -14,7 +14,7 @@ class UserTypeSelection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Login as..?',
+              'Lets create your account. Tell me about yourself you are..?',
               style: Theme.of(context)
                   .textTheme
                   .headlineMedium!

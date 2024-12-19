@@ -10,7 +10,11 @@ class BarberProfileSetup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Barber Login')),
+      appBar: AppBar(
+        title: Text(
+          'Barber Signup',
+        ),
+      ),
       body: Center(
         child: Form(
           child: Padding(
@@ -20,18 +24,10 @@ class BarberProfileSetup extends StatelessWidget {
               15,
               15,
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.purpleAccent.withValues(
-                  alpha: 0.05,
-                ),
-                borderRadius: BorderRadius.circular(
-                  20,
-                ),
-              ),
+            child: SizedBox(
               width: double.infinity,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -45,7 +41,7 @@ class BarberProfileSetup extends StatelessWidget {
                     TextFormField(
                       decoration: InputDecoration(
                         label: Text(
-                          'Your Name',
+                          'My Name',
                         ),
                       ),
                       validator: (value) {
@@ -67,7 +63,7 @@ class BarberProfileSetup extends StatelessWidget {
                     TextFormField(
                       decoration: InputDecoration(
                         label: Text(
-                          'Shop Name',
+                          'My Shop Name',
                         ),
                       ),
                       validator: (value) {
