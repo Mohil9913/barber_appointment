@@ -26,9 +26,19 @@ class LoginScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
-              'Please confirm that +91 "${phoneNumberController.text}" is your phone number for current login.',
-              style: Theme.of(context).textTheme.bodyLarge,
+            RichText(
+              text: TextSpan(
+                children: <TextSpan>[
+                  TextSpan(text: 'Please confirm that '),
+                  TextSpan(
+                    text: '+91 ${phoneNumberController.text} ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextSpan(text: 'is your phone number for current login.'),
+                ],
+              ),
             ),
             SizedBox(
               height: 5,
@@ -103,7 +113,7 @@ class LoginScreen extends StatelessWidget {
               height: 30,
             ),
             Text(
-              'Please Login',
+              'Let\'s make you look awesome',
               style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -114,19 +124,69 @@ class LoginScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Obx(
-                () => TextField(
-                  autofocus: false,
-                  controller: phoneNumberController,
-                  keyboardType: TextInputType.number,
-                  enabled: loginController.isPhoneNumberTextFieldVisible.value,
-                  inputFormatters: <TextInputFormatter>[
-                    // FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                    FilteringTextInputFormatter.digitsOnly,
+                () => Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Get.snackbar('Only Serving in India for now',
+                            'Service not available for other regions');
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 15.4,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            4,
+                          ),
+                          border: Border.all(
+                            color: !loginController
+                                    .isPhoneNumberTextFieldVisible.value
+                                ? Colors.grey.withValues(
+                                    alpha: 0.2,
+                                  )
+                                : Colors.grey,
+                          ),
+                        ),
+                        child: Text(
+                          '+91',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: !loginController
+                                    .isPhoneNumberTextFieldVisible.value
+                                ? Colors.grey.withValues(
+                                    alpha: 0.6,
+                                  )
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        autofocus: false,
+                        controller: phoneNumberController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 10,
+                        enabled:
+                            loginController.isPhoneNumberTextFieldVisible.value,
+                        inputFormatters: <TextInputFormatter>[
+                          // FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          hintText: '10 Digit Phone Number',
+                          border: OutlineInputBorder(),
+                          counterText: '',
+                        ),
+                      ),
+                    ),
                   ],
-                  decoration: InputDecoration(
-                    hintText: '10 Digit Phone Number',
-                    border: OutlineInputBorder(),
-                  ),
                 ),
               ),
             ),
@@ -136,8 +196,12 @@ class LoginScreen extends StatelessWidget {
             Obx(
               () => loginController.otpGenerated.value == true
                   ? Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       child: TextField(
+                        autofocus: true,
                         controller: otpController,
                         keyboardType: TextInputType.number,
                         inputFormatters: <TextInputFormatter>[

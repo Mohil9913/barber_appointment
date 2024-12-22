@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class BarberProfileSetup extends StatelessWidget {
-  BarberProfileSetup({super.key});
+class UserProfileSetup extends StatelessWidget {
+  UserProfileSetup({super.key});
 
   final ProfileSetupController profileSetupController =
       Get.put(ProfileSetupController());
@@ -14,7 +14,7 @@ class BarberProfileSetup extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Barber Profile Setup',
+          'Customer Profile Setup',
         ),
       ),
       body: Padding(
@@ -46,7 +46,7 @@ class BarberProfileSetup extends StatelessWidget {
                             image: profileSetupController.selectedImage.value ==
                                     null
                                 ? AssetImage(
-                                    'assets/images/login_screen/barber.jpeg')
+                                    'assets/images/login_screen/customer.jpeg')
                                 : FileImage(profileSetupController
                                     .selectedImage.value!) as ImageProvider,
                             fit: BoxFit
@@ -91,16 +91,6 @@ class BarberProfileSetup extends StatelessWidget {
                 SizedBox(
                   height: 20,
                 ),
-                TextField(
-                  decoration: InputDecoration(
-                    label: Text(
-                      'My Shop Name',
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
                 Container(
                   padding: EdgeInsets.all(
                     8,
@@ -127,10 +117,10 @@ class BarberProfileSetup extends StatelessWidget {
                         child: CupertinoDatePicker(
                             mode: CupertinoDatePickerMode.date,
                             initialDateTime: DateTime(
-                              DateTime.now().year - 25,
+                              DateTime.now().year - 10,
                             ),
-                            minimumDate: DateTime(DateTime.now().year - 80),
-                            maximumDate: DateTime(DateTime.now().year - 16),
+                            minimumDate: DateTime(DateTime.now().year - 100),
+                            maximumDate: DateTime(DateTime.now().year - 5),
                             onDateTimeChanged: (DateTime dob) {
                               profileSetupController.selectedDate.value = dob;
                             }),

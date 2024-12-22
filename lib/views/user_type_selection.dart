@@ -27,15 +27,17 @@ class UserTypeSelection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 LoginChoiceButton(
-                  buttonImage: 'assets/images/login_screen/barber.jpg',
+                  buttonImage: 'assets/images/login_screen/barber.jpeg',
                   buttonTitle: 'Barber',
                   onPressed: () => Get.toNamed('barber_login'),
                 ),
                 SizedBox(),
                 LoginChoiceButton(
-                  buttonImage: 'assets/images/login_screen/customer.jpg',
+                  buttonImage: 'assets/images/login_screen/customer.jpeg',
                   buttonTitle: 'Customer',
-                  onPressed: () {},
+                  onPressed: () => Get.toNamed(
+                    'customer_login',
+                  ),
                 ),
               ],
             ),
