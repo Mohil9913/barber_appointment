@@ -7,10 +7,11 @@ class LoginController extends GetxController {
   var otpGenerated = false.obs;
 
   Future<void> sendOtp(String? phoneNumber) async {
+    //TODO: Implement OTP logic here
     isPhoneNumberTextFieldVisible.value = false;
 
     await Future.delayed(
-      Duration(seconds: 3),
+      Duration(seconds: 1),
     );
 
     otpGenerated.value = true;
@@ -28,9 +29,10 @@ class LoginController extends GetxController {
   }
 
   void resetValues(String? otp) {
+    //TODO: remove this after OTP logic starts working
     if (otp == '123456') {
       Get.snackbar('Verified', 'You are now logged in');
-      Get.toNamed('/user_selection');
+      Get.offAllNamed('/user_selection');
     } else if (otp == '111111') {
       isPhoneNumberTextFieldVisible.value = true;
       isOtpTextFieldVisible.value = false;

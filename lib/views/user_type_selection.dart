@@ -1,9 +1,13 @@
+import 'package:barber_appointment/controllers/profile_setup_controller.dart';
 import 'package:barber_appointment/widgets/login_choice_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class UserTypeSelection extends StatelessWidget {
-  const UserTypeSelection({super.key});
+  UserTypeSelection({super.key});
+
+  final ProfileSetupController profileSetupController =
+      Get.put(ProfileSetupController());
 
   @override
   Widget build(BuildContext context) {
@@ -27,18 +31,24 @@ class UserTypeSelection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 LoginChoiceButton(
-                  buttonImage: 'assets/images/login_screen/barber.jpeg',
-                  buttonTitle: 'Barber',
-                  onPressed: () => Get.toNamed('barber_login'),
-                ),
+                    buttonImage: 'assets/images/login_screen/barber.jpeg',
+                    buttonTitle: 'Barber',
+                    onPressed: () {
+                      profileSetupController.userType.value = 'barber';
+                      Get.toNamed(
+                        '/profile_setup',
+                      );
+                    }),
                 SizedBox(),
                 LoginChoiceButton(
-                  buttonImage: 'assets/images/login_screen/customer.jpeg',
-                  buttonTitle: 'Customer',
-                  onPressed: () => Get.toNamed(
-                    'customer_login',
-                  ),
-                ),
+                    buttonImage: 'assets/images/login_screen/customer.jpeg',
+                    buttonTitle: 'Customer',
+                    onPressed: () {
+                      profileSetupController.userType.value = 'customer';
+                      Get.toNamed(
+                        '/profile_setup',
+                      );
+                    }),
               ],
             ),
           ],
