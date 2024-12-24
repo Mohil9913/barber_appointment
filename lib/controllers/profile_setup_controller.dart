@@ -1,5 +1,7 @@
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,6 +18,7 @@ class ProfileSetupController extends GetxController {
   var isLoading = false.obs;
 
   final SupabaseClient supabaseClient;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   ProfileSetupController()
       : supabaseClient = SupabaseClient(
@@ -70,9 +73,89 @@ class ProfileSetupController extends GetxController {
     selectedGender.value = gender;
   }
 
-  Future<void> saveProfile() async {
-    uploadImageToBucket();
+  Future<void> saveBarberProfile() async {
+    isLoading.value = true;
 
-    // Get.offAllNamed(userType.value == 'barber' ? '/manage_services' : '/customer_home');
+    try {
+      if (userNumber == null || userNumber!.isEmpty) {
+        Get.offAllNamed('/login_screen');
+        Get.snackbar('Something went wrong',
+            'User logged out unexpectedly! Please login again');
+        return;
+      }
+
+      DocumentReference barberDoc =
+          _firestore.collection('barber').doc(userNumber);
+
+      DocumentSnapshot docSnapshot = await barberDoc.get();
+
+      if (docSnapshot.exists) {
+        isLoading.value = false;
+        Get.offAllNamed('/barber_home');
+      } else {
+        final profilePicture = await uploadImageToBucket();
+
+        await barberDoc.set({
+          'barberId': userNumber,
+          'imageUrl': profilePicture,
+          'barberName': name.value,
+          'shops': [],
+        });
+        isLoading.value = false;
+        Get.offAllNamed('/barber_home');
+      }
+    } catch (e) {
+      isLoading.value = false;
+      log('Error Creating Barber: $e');
+      Get.snackbar('Error Creating User',
+          'Failed to create new user. Please try again.');
+    }
+  }
+
+  Future<void> saveCustomerProfile() async {
+    isLoading.value = true;
+
+    try {
+      if (userNumber == null || userNumber!.isEmpty) {
+        Get.offAllNamed('/login_screen');
+        Get.snackbar('Something went wrong',
+            'User logged out unexpectedly! Please login again');
+        return;
+      }
+
+      DocumentReference customerDoc =
+          _firestore.collection('customer').doc(userNumber);
+
+      DocumentSnapshot docSnapshot = await customerDoc.get();
+
+      if (docSnapshot.exists) {
+        isLoading.value = false;
+        Get.offAllNamed('/customer_home');
+      } else {
+        final profilePicture = await uploadImageToBucket();
+
+        await customerDoc.set({
+          'customerId': userNumber,
+          'imageUrl': profilePicture,
+          'customerName': name.value,
+          'customerGender': selectedGender.value,
+          'customerDOB': selectedDate.value,
+          'appointments': [],
+        });
+        isLoading.value = false;
+        Get.offAllNamed('/customer_home');
+      }
+    } catch (e) {
+      isLoading.value = false;
+      log('Error creating Customer: $e');
+      Get.snackbar('Error Creating User',
+          'Failed to create new user. Please try again.');
+    }
+  }
+
+  Future<void> logoutUser() async {
+    await FirebaseAuth.instance.signOut();
+    Get.snackbar('Logged out', 'You account is now logged out successfully!');
+    Get.offAllNamed('login_screen');
   }
 }

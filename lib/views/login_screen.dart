@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
-  final LoginController loginController = Get.put(LoginController());
+  final LoginController loginController = Get.find();
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
 
@@ -17,7 +17,6 @@ class LoginScreen extends StatelessWidget {
       titlePadding: EdgeInsets.only(
         top: 30,
       ),
-      barrierDismissible: false,
       content: Padding(
         padding: const EdgeInsets.symmetric(
           vertical: 10.0,

@@ -106,7 +106,9 @@ class ProfileSetup extends StatelessWidget {
                     if (Get.isDialogOpen == true) {
                       Get.back();
                     }
-                    profileSetupController.saveProfile();
+                    profileSetupController.userType.value == 'barber'
+                        ? profileSetupController.saveBarberProfile()
+                        : profileSetupController.saveCustomerProfile();
                   },
                   style: TextButton.styleFrom(
                     shape: RoundedRectangleBorder(

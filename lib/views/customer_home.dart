@@ -3,8 +3,8 @@ import 'package:barber_appointment/widgets/circular_avatar_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class CustomerHomeScreen extends StatelessWidget {
-  CustomerHomeScreen({super.key});
+class CustomerHome extends StatelessWidget {
+  CustomerHome({super.key});
 
   final ProfileSetupController profileSetupController =
       Get.put(ProfileSetupController());
@@ -57,7 +57,9 @@ class CustomerHomeScreen extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {},
+              onTap: () {
+                profileSetupController.logoutUser();
+              },
             ),
           ],
         ),
