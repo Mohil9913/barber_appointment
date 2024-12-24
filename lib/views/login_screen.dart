@@ -67,12 +67,10 @@ class LoginScreen extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () async {
-                    loginController.isLoading.value = true;
                     if (Get.isDialogOpen == true) {
                       Get.back();
                     }
                     await loginController.sendOtp(phoneNumberController.text);
-                    loginController.isLoading.value = false;
                   },
                   style: TextButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -236,37 +234,28 @@ class LoginScreen extends StatelessWidget {
                       SizedBox(
                         height: 10,
                       ),
-                      Obx(
-                        () => TextButton(
-                          style: TextButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                12,
-                              ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              12,
                             ),
                           ),
-                          onPressed: () {
-                            if (phoneNumberController.text.length != 10) {
-                              Get.snackbar(
-                                'Invalid Number',
-                                'Please enter valid 10 digit phone number.',
-                              );
-                              return;
-                            }
-                            loginController.otpGenerated.value
-                                ? otpController.text.length == 6
-                                    ? loginController
-                                        .resetValues(otpController.text)
-                                    : Get.snackbar('Invalid OTP',
-                                        'Please enter valid 6 digit OTP')
-                                : confirmationDialog(context);
-                          },
-                          child: Padding(
+                        ),
+                        onPressed: () {
+                          if (!loginController.otpGenerated.value) {
+                            confirmationDialog(context);
+                          } else {
+                            loginController.verifyOtp(otpController.text);
+                          }
+                        },
+                        child: Obx(
+                          () => Padding(
                             padding: EdgeInsets.symmetric(
                               vertical: 8,
                               horizontal: 50,
                             ),
-                            child: loginController.isLoading.value
+                            child: loginController.isLoading.value == true
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -275,7 +264,9 @@ class LoginScreen extends StatelessWidget {
                                         width: 10,
                                       ),
                                       Text(
-                                        'Generating OTP...',
+                                        loginController.otpGenerated.value
+                                            ? 'Verifying OTP...'
+                                            : 'Generating OTP...',
                                         style: TextStyle(color: Colors.grey),
                                       ),
                                     ],

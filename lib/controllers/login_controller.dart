@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
@@ -6,39 +7,64 @@ class LoginController extends GetxController {
   var isLoading = false.obs;
   var otpGenerated = false.obs;
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String _verificationId = '';
+
   Future<void> sendOtp(String? phoneNumber) async {
-    //TODO: Implement OTP logic here
     isPhoneNumberTextFieldVisible.value = false;
+    isLoading.value = true;
 
-    await Future.delayed(
-      Duration(seconds: 1),
-    );
-
-    otpGenerated.value = true;
-
-    if (otpGenerated.value) {
-      isOtpTextFieldVisible.value = true;
-
-      Get.snackbar('OTP Sent', 'Please check your sms app for OTP');
-    } else {
-      isPhoneNumberTextFieldVisible.value = true;
-      isOtpTextFieldVisible.value = false;
-
-      Get.snackbar('Error', 'OTP not Generated!');
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: '+91$phoneNumber',
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+          Get.snackbar('Success', 'Auto-login completed');
+          Get.offAllNamed('/user_selection');
+          isLoading.value = false;
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          isPhoneNumberTextFieldVisible.value = true;
+          Get.snackbar('Error', e.message ?? 'Verification Failed');
+          isLoading.value = false;
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          isPhoneNumberTextFieldVisible.value = false;
+          isOtpTextFieldVisible.value = true;
+          otpGenerated.value = true;
+          Get.snackbar('OTP Sent', 'Please check your SMS');
+          isLoading.value = false;
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+          isLoading.value = false;
+        },
+      );
+    } catch (e) {
+      Get.snackbar('Invalid OTP', 'Please enter the correct OTP');
+      isLoading.value = false;
     }
   }
 
-  void resetValues(String? otp) {
-    //TODO: remove this after OTP logic starts working
-    if (otp == '123456') {
-      Get.snackbar('Verified', 'You are now logged in');
+  Future<void> verifyOtp(String otp) async {
+    isLoading.value = true;
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId,
+        smsCode: otp,
+      );
+
+      await _auth.signInWithCredential(credential);
+
+      Get.snackbar('Success', 'You are now logged in');
+      isLoading.value = false;
       Get.offAllNamed('/user_selection');
-    } else if (otp == '111111') {
-      isPhoneNumberTextFieldVisible.value = true;
-      isOtpTextFieldVisible.value = false;
-      otpGenerated.value = false;
-    } else {
-      Get.snackbar('Invalid OTP', 'Please recheck received OTP');
+    } catch (e) {
+      Get.snackbar('Invalid OTP', 'Please enter the correct OTP');
+      isLoading.value = false;
     }
   }
 }
