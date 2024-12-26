@@ -19,9 +19,6 @@ class LoginController extends GetxController {
       Future.delayed(Duration.zero, () => Get.offAllNamed('/login_screen'));
       return;
     }
-    if (!Get.isSnackbarOpen) {
-      Get.snackbar('Connecting Server', 'Trying to fetch user type');
-    }
     final loginAs = await checkIfNewUser();
 
     if (loginAs == 'barber') {

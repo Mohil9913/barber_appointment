@@ -1,9 +1,11 @@
 import 'package:barber_appointment/controllers/login_controller.dart';
 import 'package:barber_appointment/firebase_options.dart';
+import 'package:barber_appointment/views/add_shop.dart';
 import 'package:barber_appointment/views/barber_home.dart';
 import 'package:barber_appointment/views/customer_home.dart';
 import 'package:barber_appointment/views/login_screen.dart';
 import 'package:barber_appointment/views/manage_services.dart';
+import 'package:barber_appointment/views/manage_shops.dart';
 import 'package:barber_appointment/views/profile_setup.dart';
 import 'package:barber_appointment/views/user_type_selection.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -36,6 +38,8 @@ class RunApp extends StatelessWidget {
         GetPage(name: '/manage_services', page: () => ManageServices()),
         GetPage(name: '/customer_home', page: () => CustomerHome()),
         GetPage(name: '/barber_home', page: () => BarberHome()),
+        GetPage(name: '/manage_shops', page: () => ManageShops()),
+        GetPage(name: '/add_shop', page: () => AddShop()),
       ],
       // Navigate based on the login state
       home: FutureBuilder<void>(

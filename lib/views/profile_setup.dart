@@ -61,17 +61,6 @@ class ProfileSetup extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                  profileSetupController.userType.value == 'barber'
-                      ? TextSpan(text: '\nYour shop name is ')
-                      : TextSpan(),
-                  profileSetupController.userType.value == 'barber'
-                      ? TextSpan(
-                          text: profileSetupController.shopName.value,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : TextSpan(),
                 ],
               ),
             ),
@@ -245,28 +234,6 @@ class ProfileSetup extends StatelessWidget {
                       height: 20,
                     ),
                     profileSetupController.userType.value == 'barber'
-                        ? Column(
-                            children: [
-                              TextField(
-                                enabled:
-                                    !profileSetupController.isLoading.value,
-                                autofocus: false,
-                                onChanged: (value) {
-                                  profileSetupController.shopName.value = value;
-                                },
-                                decoration: InputDecoration(
-                                  label: Text(
-                                    'My Shop Name',
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
-                            ],
-                          )
-                        : Container(),
-                    profileSetupController.userType.value == 'barber'
                         ? Container()
                         : Container(
                             padding: EdgeInsets.all(
@@ -323,13 +290,6 @@ class ProfileSetup extends StatelessWidget {
                             if (profileSetupController.name.value == '') {
                               Get.snackbar('Provide your name',
                                   'User name can\'t be empty');
-                              return;
-                            }
-                            if (profileSetupController.userType.value ==
-                                    'barber' &&
-                                profileSetupController.shopName.value == '') {
-                              Get.snackbar('Provide your shop name',
-                                  'Shop name can\'t be empty');
                               return;
                             }
                             confirmationDialog(context);

@@ -1,6 +1,5 @@
 import 'package:barber_appointment/controllers/profile_setup_controller.dart';
 import 'package:barber_appointment/controllers/services_controller.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -263,96 +262,97 @@ class ManageServices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Obx(
-          () => Text(
-            'Manage Services for ${profileSetupController.shopName.value}',
-          ),
-        ),
-      ),
-      body: Obx(
-        () => ListView.builder(
-          itemCount: servicesController.services.length,
-          itemBuilder: (context, index) {
-            final service = servicesController.services[index];
-            return Dismissible(
-              key: Key(service['name']),
-              background: Container(
-                color: Colors.blueAccent,
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Icon(
-                  Icons.edit,
-                ),
-              ),
-              secondaryBackground: Container(
-                color: Colors.red,
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Icon(Icons.delete),
-              ),
-              confirmDismiss: (direction) async {
-                if (direction == DismissDirection.startToEnd) {
-                  editServiceDialog(context, index);
-                  return false;
-                } else if (direction == DismissDirection.endToStart) {
-                  bool? confirmDelete = await Get.defaultDialog<bool>(
-                    title: 'Confirm Delete',
-                    titlePadding: EdgeInsets.only(top: 30),
-                    barrierDismissible: false,
-                    content: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 30.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Get.back(result: false),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Get.back(result: true),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.red),
-                            child: Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                  return confirmDelete ?? false;
-                }
-                return false;
-              },
-              onDismissed: (direction) {
-                if (direction == DismissDirection.endToStart) {
-                  servicesController.deleteService(index);
-                }
-              },
-              child: CheckboxListTile(
-                title: Text(service['name']),
-                subtitle: Text('Time: ${service['minutes']} Minutes'),
-                value: service['selected'],
-                secondary: Text('₹ ${service['price']}'),
-                onChanged: (value) {
-                  servicesController.toggleService(index);
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          addServiceDialog(context);
-        },
-        child: Icon(CupertinoIcons.plus),
-      ),
-    );
+    return Placeholder();
+    // return Scaffold(
+    //   appBar: AppBar(
+    //     title: Obx(
+    //       () => Text(
+    //         'Manage Services for ${profileSetupController.shopName.value}',
+    //       ),
+    //     ),
+    //   ),
+    //   body: Obx(
+    //     () => ListView.builder(
+    //       itemCount: servicesController.services.length,
+    //       itemBuilder: (context, index) {
+    //         final service = servicesController.services[index];
+    //         return Dismissible(
+    //           key: Key(service['name']),
+    //           background: Container(
+    //             color: Colors.blueAccent,
+    //             alignment: Alignment.centerLeft,
+    //             padding: EdgeInsets.symmetric(horizontal: 20),
+    //             child: Icon(
+    //               Icons.edit,
+    //             ),
+    //           ),
+    //           secondaryBackground: Container(
+    //             color: Colors.red,
+    //             alignment: Alignment.centerRight,
+    //             padding: EdgeInsets.symmetric(horizontal: 20),
+    //             child: Icon(Icons.delete),
+    //           ),
+    //           confirmDismiss: (direction) async {
+    //             if (direction == DismissDirection.startToEnd) {
+    //               editServiceDialog(context, index);
+    //               return false;
+    //             } else if (direction == DismissDirection.endToStart) {
+    //               bool? confirmDelete = await Get.defaultDialog<bool>(
+    //                 title: 'Confirm Delete',
+    //                 titlePadding: EdgeInsets.only(top: 30),
+    //                 barrierDismissible: false,
+    //                 content: Padding(
+    //                   padding: const EdgeInsets.symmetric(
+    //                       vertical: 10.0, horizontal: 30.0),
+    //                   child: Row(
+    //                     mainAxisAlignment: MainAxisAlignment.end,
+    //                     children: [
+    //                       TextButton(
+    //                         onPressed: () => Get.back(result: false),
+    //                         child: Text(
+    //                           'Cancel',
+    //                           style: TextStyle(color: Colors.grey),
+    //                         ),
+    //                       ),
+    //                       TextButton(
+    //                         onPressed: () => Get.back(result: true),
+    //                         style: TextButton.styleFrom(
+    //                             backgroundColor: Colors.red),
+    //                         child: Text('Delete'),
+    //                       ),
+    //                     ],
+    //                   ),
+    //                 ),
+    //               );
+    //               return confirmDelete ?? false;
+    //             }
+    //             return false;
+    //           },
+    //           onDismissed: (direction) {
+    //             if (direction == DismissDirection.endToStart) {
+    //               servicesController.deleteService(index);
+    //             }
+    //           },
+    //           child: CheckboxListTile(
+    //             title: Text(service['name']),
+    //             subtitle: Text('Time: ${service['minutes']} Minutes'),
+    //             value: service['selected'],
+    //             secondary: Text('₹ ${service['price']}'),
+    //             onChanged: (value) {
+    //               servicesController.toggleService(index);
+    //             },
+    //             controlAffinity: ListTileControlAffinity.leading,
+    //           ),
+    //         );
+    //       },
+    //     ),
+    //   ),
+    //   floatingActionButton: FloatingActionButton(
+    //     onPressed: () {
+    //       addServiceDialog(context);
+    //     },
+    //     child: Icon(CupertinoIcons.plus),
+    //   ),
+    // );
   }
 }

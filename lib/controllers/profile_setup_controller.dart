@@ -11,7 +11,6 @@ class ProfileSetupController extends GetxController {
   final userNumber = FirebaseAuth.instance.currentUser!.phoneNumber;
   Rx<String?> userType = Rx<String?>(null);
   Rx<String?> name = Rx<String?>(null);
-  Rx<String?> shopName = Rx<String?>(null);
   Rx<File?> selectedImage = Rx<File?>(null);
   Rx<DateTime> selectedDate = Rx<DateTime>(DateTime(DateTime.now().year - 10));
   var selectedGender = 'Male'.obs;
