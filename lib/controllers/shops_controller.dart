@@ -17,6 +17,10 @@ class ShopsController extends GetxController {
   Rx<TimeOfDay?> employeeExitTime = Rx<TimeOfDay?>(null);
   var isLoading = false.obs;
 
+  String timeOfDayToString(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
   void toggleService(int index) {
     services[index]['serviceStatus'] = !services[index]['serviceStatus'];
     services.refresh();
@@ -118,50 +122,82 @@ class ShopsController extends GetxController {
     }
   }
 
-  Future<void> addShop(
+  Future<void> createShopAndAddData(
     String shopName,
   ) async {
-    // isLoading.value = true;
-    // List<String> serviceIds = [];
-    //
-    // try {
-    //   final shopData = {
-    //     "status": true,
-    //     "name": shopName,
-    //     "location": {"lat": latitude.value, "long": longitude.value},
-    //     "customer": [],
-    //     "appointments": [],
-    //     "employees": [],
-    //     "services": []
-    //   };
-    //
-    //   final shopRef =
-    //       await FirebaseFirestore.instance.collection('shop').add(shopData);
-    //
-    //   await FirebaseFirestore.instance
-    //       .collection('barber')
-    //       .doc(barberId)
-    //       .update({
-    //     "shops": FieldValue.arrayUnion([shopRef])
-    //   });
-    //
-    //   for (var service in services) {
-    //     final serviceData = {
-    //       "status": service['status'] ?? true,
-    //       "shop_id": shopRef,
-    //       "name": service['name'],
-    //       "charges": service['charges'],
-    //       "time_slots": service['time_slots']
-    //     };
-    //
-    //     final serviceRef = await FirebaseFirestore.instance
-    //         .collection('service')
-    //         .add(serviceData);
-    //     serviceIds.add(serviceRef.id); // Collect the ID of the created service.
-    //   }
-    // } catch (e) {
-    //   Get.snackbar('Error Fetching shops', '$e');
-    //   isLoading.value = false;
-    // }
+    isLoading.value = true;
+    List<String> serviceIds = [];
+    List<String> employeeIds = [];
+
+    try {
+      final shopData = {
+        "status": true,
+        "name": shopName,
+        "location": {"lat": latitude.value, "long": longitude.value},
+        "customer": [],
+        "appointments": [],
+        "employees": [],
+        "services": [],
+        "exceptions": []
+      };
+
+      final shopRef =
+          await FirebaseFirestore.instance.collection('shop').add(shopData);
+
+      await FirebaseFirestore.instance
+          .collection('barber')
+          .doc(barberId)
+          .update({
+        "shops": FieldValue.arrayUnion([shopRef.id])
+      });
+
+      for (var service in services) {
+        final serviceData = {
+          "serviceStatus": service['serviceStatus'] ?? true,
+          "shopId": shopRef.id,
+          "serviceName": service['serviceName'],
+          "servicePrice": service['servicePrice'],
+          "serviceTime": service['serviceTime'],
+          "exceptions": []
+        };
+
+        final serviceRef = await FirebaseFirestore.instance
+            .collection('service')
+            .add(serviceData);
+        serviceIds.add(serviceRef.id);
+      }
+
+      for (var employee in employees) {
+        final employeeData = {
+          "employeeStatus": employee['employeeStatus'] ?? true,
+          "shopId": shopRef.id,
+          "skills": employee['skills'],
+          "entryTime": timeOfDayToString(employee['entryTime']),
+          "exitTime": timeOfDayToString(employee['exitTime']),
+          "exceptions": []
+        };
+
+        final employeeRef = await FirebaseFirestore.instance
+            .collection('employee')
+            .add(employeeData);
+        employeeIds.add(employeeRef.id);
+      }
+
+      await FirebaseFirestore.instance
+          .collection('shop')
+          .doc(shopRef.id)
+          .update({
+        "services": FieldValue.arrayUnion(serviceIds),
+        "employees": FieldValue.arrayUnion(employeeIds)
+      });
+
+      Get.snackbar('$shopName created successfully',
+          'Your shop with all services and employees is now listed!');
+      isLoading.value = false;
+      Get.off('/manage_shops');
+    } catch (e) {
+      Get.snackbar('Error Fetching shops', '$e');
+      isLoading.value = false;
+    }
   }
 }

@@ -8,8 +8,7 @@ import 'package:intl/intl.dart';
 class ProfileSetup extends StatelessWidget {
   ProfileSetup({super.key});
 
-  final ProfileSetupController profileSetupController =
-      Get.put(ProfileSetupController());
+  final ProfileSetupController profileSetupController = Get.find();
   final List<String> genders = ['Male', 'Female'];
 
   void confirmationDialog(BuildContext context) {

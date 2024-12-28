@@ -1125,6 +1125,8 @@ class AddShop extends StatelessWidget {
                           return;
                         }
                         log('\n\n\n\nbarber id: ${shopsController.barberId}\n\nname: ${shopNameController.text.trim()}\n\nservices: ${shopsController.services}\n\nemployees: ${shopsController.employees}\n\nshop location: ${shopsController.latitude.value.trim()} - ${shopsController.longitude.value.trim()}\n\n\n\n');
+                        shopsController
+                            .createShopAndAddData(shopNameController.text);
                       },
                       style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -1136,7 +1138,7 @@ class AddShop extends StatelessWidget {
                       child: shopsController.isLoading.value
                           ? CupertinoActivityIndicator()
                           : Text(
-                              'Add Shop',
+                              'Create Shop',
                             ),
                     ),
                   ),
