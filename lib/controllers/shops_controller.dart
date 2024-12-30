@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ class ShopsController extends GetxController {
   RxList employees = RxList();
   RxString latitude = ''.obs;
   RxString longitude = ''.obs;
+  RxInt serviceTime = 0.obs;
 
   Rx<TimeOfDay?> employeeEntryTime = Rx<TimeOfDay?>(null);
   Rx<TimeOfDay?> employeeExitTime = Rx<TimeOfDay?>(null);
@@ -46,24 +49,6 @@ class ShopsController extends GetxController {
 
   int calculateTimeSlots(int minutes) {
     return (minutes / 30).ceil();
-  }
-
-  Future<void> fetchShops() async {
-    try {
-      DocumentSnapshot barberDoc = await FirebaseFirestore.instance
-          .collection('barber')
-          .doc(barberId)
-          .get();
-
-      if (barberDoc.exists) {
-        final List<dynamic> fetchedShops = barberDoc['shops'] ?? [];
-        shops.value = fetchedShops;
-      } else {
-        Get.offAllNamed('/login_screen');
-      }
-    } catch (e) {
-      Get.snackbar('Error Fetching shops', '$e');
-    }
   }
 
   Future<void> pickEntryTime(BuildContext context) async {
@@ -122,12 +107,30 @@ class ShopsController extends GetxController {
     }
   }
 
-  Future<void> createShopAndAddData(
-    String shopName,
-  ) async {
+  Future<void> fetchShops() async {
+    try {
+      DocumentSnapshot barberDoc = await FirebaseFirestore.instance
+          .collection('barber')
+          .doc(barberId)
+          .get();
+
+      if (barberDoc.exists) {
+        final List<dynamic> fetchedShops = barberDoc['shops'] ?? [];
+        shops.value = fetchedShops;
+      } else {
+        Get.offAllNamed('/login_screen');
+      }
+    } catch (e) {
+      Get.snackbar('Error Fetching shops', '$e');
+    }
+  }
+
+  Future<void> createShopAndAddData(String shopName) async {
     isLoading.value = true;
+
     List<String> serviceIds = [];
     List<String> employeeIds = [];
+    DocumentReference? shopRef;
 
     try {
       final shopData = {
@@ -141,7 +144,7 @@ class ShopsController extends GetxController {
         "exceptions": []
       };
 
-      final shopRef =
+      shopRef =
           await FirebaseFirestore.instance.collection('shop').add(shopData);
 
       await FirebaseFirestore.instance
@@ -191,12 +194,41 @@ class ShopsController extends GetxController {
         "employees": FieldValue.arrayUnion(employeeIds)
       });
 
+      Get.offAllNamed('/barber_home');
       Get.snackbar('$shopName created successfully',
           'Your shop with all services and employees is now listed!');
-      isLoading.value = false;
-      Get.off('/manage_shops');
-    } catch (e) {
-      Get.snackbar('Error Fetching shops', '$e');
+    } catch (e, stackTrace) {
+      if (shopRef != null) {
+        await FirebaseFirestore.instance
+            .collection('shop')
+            .doc(shopRef.id)
+            .delete();
+
+        await FirebaseFirestore.instance
+            .collection('barber')
+            .doc(barberId)
+            .update({
+          "shops": FieldValue.arrayRemove([shopRef.id])
+        });
+      }
+
+      for (var serviceId in serviceIds) {
+        await FirebaseFirestore.instance
+            .collection('service')
+            .doc(serviceId)
+            .delete();
+      }
+
+      for (var employeeId in employeeIds) {
+        await FirebaseFirestore.instance
+            .collection('employee')
+            .doc(employeeId)
+            .delete();
+      }
+
+      log('Error: $e\n\nStacktrace: $stackTrace');
+      Get.snackbar('Error Creating Shop', '$e');
+    } finally {
       isLoading.value = false;
     }
   }

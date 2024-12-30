@@ -35,7 +35,7 @@ class UserTypeSelection extends StatelessWidget {
                     buttonTitle: 'Barber',
                     onPressed: () {
                       profileSetupController.userType.value = 'barber';
-                      Get.offNamed(
+                      Get.toNamed(
                         '/profile_setup',
                       );
                     }),
@@ -45,7 +45,7 @@ class UserTypeSelection extends StatelessWidget {
                     buttonTitle: 'Customer',
                     onPressed: () {
                       profileSetupController.userType.value = 'customer';
-                      Get.offNamed(
+                      Get.toNamed(
                         '/profile_setup',
                       );
                     }),

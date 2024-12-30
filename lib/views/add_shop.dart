@@ -15,7 +15,6 @@ class AddShop extends StatelessWidget {
   final TextEditingController employeeNameController = TextEditingController();
   final TextEditingController serviceNameController = TextEditingController();
   final TextEditingController servicePriceController = TextEditingController();
-  final TextEditingController serviceTimeController = TextEditingController();
 
   void confirmDeleteService(BuildContext context, int index) {
     Get.defaultDialog(
@@ -129,17 +128,30 @@ class AddShop extends StatelessWidget {
                 SizedBox(
                   height: 20,
                 ),
-                TextField(
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  controller: serviceTimeController,
-                  decoration: InputDecoration(
-                    label: Text(
-                      'Minutes Required',
+                Text("Select time slots for service. [1 slot = 30 Minutes]"),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          if (shopsController.serviceTime.value > 0) {
+                            shopsController.serviceTime.value--;
+                          }
+                        },
+                        child: Icon(CupertinoIcons.minus)),
+                    SizedBox(
+                      width: 10,
                     ),
-                  ),
+                    Obx(() => Text('${shopsController.serviceTime.value}')),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    TextButton(
+                        onPressed: () {
+                          shopsController.serviceTime.value++;
+                        },
+                        child: Icon(CupertinoIcons.plus)),
+                  ],
                 ),
                 SizedBox(
                   height: 5,
@@ -152,7 +164,7 @@ class AddShop extends StatelessWidget {
                         Get.back();
                         serviceNameController.text = '';
                         servicePriceController.text = '';
-                        serviceTimeController.text = '';
+                        shopsController.serviceTime.value = 0;
                       },
                       style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -181,10 +193,9 @@ class AddShop extends StatelessWidget {
                               'Invalid Price', 'Please enter a valid price!');
                           return;
                         }
-                        if (serviceTimeController.text.trim().isEmpty ||
-                            int.parse(serviceTimeController.text) < 1) {
-                          Get.snackbar(
-                              'Invalid Time', 'Please enter a valid !');
+                        if (shopsController.serviceTime.value < 1) {
+                          Get.snackbar('Time slots can\'t be 0',
+                              'Please select required timeslots !');
                           return;
                         }
                         Get.back();
@@ -193,12 +204,11 @@ class AddShop extends StatelessWidget {
                           "serviceStatus": true,
                           "serviceName": serviceNameController.text.trim(),
                           "servicePrice": servicePriceController.text.trim(),
-                          "serviceTime": shopsController.calculateTimeSlots(
-                              int.parse(serviceTimeController.text.trim())),
+                          "serviceTime": shopsController.serviceTime.value,
                         });
                         serviceNameController.text = '';
                         servicePriceController.text = '';
-                        serviceTimeController.text = '';
+                        shopsController.serviceTime.value = 0;
                       },
                       style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -225,15 +235,8 @@ class AddShop extends StatelessWidget {
     serviceNameController.text = shopsController.services[index]['serviceName'];
     servicePriceController.text =
         shopsController.services[index]['servicePrice'];
-
-    final serviceTime = shopsController.services[index]['serviceTime'];
-    if (serviceTime is int) {
-      serviceTimeController.text = (30 * serviceTime).toString();
-    } else if (serviceTime is String) {
-      serviceTimeController.text = (30 * int.parse(serviceTime)).toString();
-    } else {
-      serviceTimeController.text = '0';
-    }
+    shopsController.serviceTime.value =
+        shopsController.services[index]['serviceTime'];
 
     Get.bottomSheet(
       isScrollControlled: false,
@@ -284,17 +287,30 @@ class AddShop extends StatelessWidget {
                 SizedBox(
                   height: 20,
                 ),
-                TextField(
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  controller: serviceTimeController,
-                  decoration: InputDecoration(
-                    label: Text(
-                      'Minutes Required',
+                Text("Select time slots for service. [1 slot = 30 Minutes]"),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          if (shopsController.serviceTime.value > 0) {
+                            shopsController.serviceTime.value--;
+                          }
+                        },
+                        child: Icon(CupertinoIcons.minus)),
+                    SizedBox(
+                      width: 10,
                     ),
-                  ),
+                    Obx(() => Text('${shopsController.serviceTime.value}')),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    TextButton(
+                        onPressed: () {
+                          shopsController.serviceTime.value++;
+                        },
+                        child: Icon(CupertinoIcons.plus)),
+                  ],
                 ),
                 SizedBox(
                   height: 5,
@@ -307,7 +323,7 @@ class AddShop extends StatelessWidget {
                         Get.back();
                         serviceNameController.text = '';
                         servicePriceController.text = '';
-                        serviceTimeController.text = '';
+                        shopsController.serviceTime.value = 0;
                       },
                       style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -336,25 +352,22 @@ class AddShop extends StatelessWidget {
                               'Invalid Price', 'Please enter a valid price!');
                           return;
                         }
-                        if (serviceTimeController.text.trim().isEmpty ||
-                            int.parse(serviceTimeController.text) < 1) {
-                          Get.snackbar(
-                              'Invalid Time', 'Please enter a valid !');
+                        if (shopsController.serviceTime.value < 1) {
+                          Get.snackbar('Time slots can\'t be 0',
+                              'Please select required timeslots !');
                           return;
                         }
-
                         Get.back();
 
                         shopsController.services[index] = {
                           "serviceStatus": true,
                           "serviceName": serviceNameController.text.trim(),
                           "servicePrice": servicePriceController.text.trim(),
-                          "serviceTime": shopsController.calculateTimeSlots(
-                              int.parse(serviceTimeController.text.trim())),
+                          "serviceTime": shopsController.serviceTime.value,
                         };
                         serviceNameController.text = '';
                         servicePriceController.text = '';
-                        serviceTimeController.text = '';
+                        shopsController.serviceTime.value = 0;
                       },
                       style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -830,56 +843,48 @@ class AddShop extends StatelessWidget {
       appBar: AppBar(
         title: Text('List your shop'),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (shopNameController.text.trim().isEmpty) {
+            Get.snackbar('No Name', 'Shop name cannot be empty.');
+            return;
+          }
+          if (shopsController.services.isEmpty) {
+            Get.snackbar(
+                '0 Services', 'Atlest 1 service needed to register shop');
+            return;
+          }
+          if (shopsController.employees.isEmpty) {
+            Get.snackbar(
+                '0 Employees', 'Atlest 1 Employee needed to register shop');
+            return;
+          }
+          if (shopsController.latitude.value.trim().isEmpty ||
+              shopsController.longitude.value.trim().isEmpty) {
+            Get.snackbar('Fetch Location to add shop',
+                'Your current location will be marked as shop location');
+            return;
+          }
+          log('\n\n\n\nbarber id: ${shopsController.barberId}\n\nname: ${shopNameController.text.trim()}\n\nservices: ${shopsController.services}\n\nemployees: ${shopsController.employees}\n\nshop location: ${shopsController.latitude.value.trim()} - ${shopsController.longitude.value.trim()}\n\n\n\n');
+          shopsController.createShopAndAddData(shopNameController.text);
+        },
+        child: Obx(
+          () => shopsController.isLoading.value
+              ? CupertinoActivityIndicator()
+              : Icon(Icons.save),
+        ),
+      ),
       body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Card(
-                  child: Obx(
-                    () => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              textAlign: TextAlign.center,
-                              softWrap: true,
-                              // overflow: TextOverflow.ellipsis,
-                              // maxLines: 4,
-                              shopsController.longitude.value.trim().isEmpty
-                                  ? 'Please fetch current location as shop location'
-                                  : 'Location Fetched\n${shopsController.latitude.value} - ${shopsController.longitude.value}',
-                            ),
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  12,
-                                ),
-                              ),
-                            ),
-                            onPressed: () {
-                              shopsController.fetchLocation();
-                            },
-                            child: shopsController.isLoading.value
-                                ? CupertinoActivityIndicator()
-                                : Text(
-                                    'Fetch Location',
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
                 SizedBox(
                   height: 20,
                 ),
                 TextField(
+                  focusNode: FocusNode(),
                   controller: shopNameController,
                   decoration: InputDecoration(
                     label: Text(
@@ -1045,7 +1050,10 @@ class AddShop extends StatelessWidget {
                                                 fontWeight: FontWeight.bold),
                                           ),
                                           subtitle: Text(
-                                              'Time: [${MaterialLocalizations.of(context).formatTimeOfDay(employee['entryTime'])} - ${MaterialLocalizations.of(context).formatTimeOfDay(employee['exitTime'])}]\nSpecialized: ${employee['skills']}'),
+                                            employee['skills'].isEmpty
+                                                ? 'Time: [${MaterialLocalizations.of(context).formatTimeOfDay(employee['entryTime'])} - ${MaterialLocalizations.of(context).formatTimeOfDay(employee['exitTime'])}]'
+                                                : 'Time: [${MaterialLocalizations.of(context).formatTimeOfDay(employee['entryTime'])} - ${MaterialLocalizations.of(context).formatTimeOfDay(employee['exitTime'])}]\nSpecialized: ${employee['skills']}',
+                                          ),
                                           trailing: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -1097,51 +1105,50 @@ class AddShop extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  height: 10,
+                  height: 20,
                 ),
-                SizedBox(
-                  width: double.infinity,
+                Card(
                   child: Obx(
-                    () => TextButton(
-                      onPressed: () {
-                        if (shopNameController.text.trim().isEmpty) {
-                          Get.snackbar('Error', 'Shop name cannot be empty.');
-                          return;
-                        }
-                        if (shopsController.services.isEmpty) {
-                          Get.snackbar('0 Services',
-                              'Atlest 1 service needed to register shop');
-                          return;
-                        }
-                        if (shopsController.employees.isEmpty) {
-                          Get.snackbar('0 Employees',
-                              'Atlest 1 Employee needed to register shop');
-                          return;
-                        }
-                        if (shopsController.latitude.value.trim().isEmpty ||
-                            shopsController.longitude.value.trim().isEmpty) {
-                          Get.snackbar('Fetch Location to add shop',
-                              'Your current location will be marked as shop location');
-                          return;
-                        }
-                        log('\n\n\n\nbarber id: ${shopsController.barberId}\n\nname: ${shopNameController.text.trim()}\n\nservices: ${shopsController.services}\n\nemployees: ${shopsController.employees}\n\nshop location: ${shopsController.latitude.value.trim()} - ${shopsController.longitude.value.trim()}\n\n\n\n');
-                        shopsController
-                            .createShopAndAddData(shopNameController.text);
-                      },
-                      style: TextButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            12,
-                          ),
-                        ),
-                      ),
-                      child: shopsController.isLoading.value
-                          ? CupertinoActivityIndicator()
-                          : Text(
-                              'Create Shop',
+                    () => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              textAlign: TextAlign.center,
+                              softWrap: true,
+                              // overflow: TextOverflow.ellipsis,
+                              // maxLines: 4,
+                              shopsController.longitude.value.trim().isEmpty
+                                  ? 'Please fetch current location as shop location'
+                                  : 'Location Fetched\n${shopsController.latitude.value} - ${shopsController.longitude.value}',
                             ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  12,
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              shopsController.fetchLocation();
+                            },
+                            child: shopsController.isLoading.value
+                                ? CupertinoActivityIndicator()
+                                : Text(
+                                    'Fetch Location',
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                ),
+                SizedBox(
+                  height: 20,
                 ),
               ],
             ),

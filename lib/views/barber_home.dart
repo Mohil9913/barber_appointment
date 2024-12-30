@@ -10,22 +10,20 @@ class BarberHome extends StatelessWidget {
       appBar: AppBar(
         title: Text('Appointment Dashboard'),
       ),
-      body: Column(
-        children: [
-          TextButton(
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () {
-              Get.toNamed('/manage_shops');
-            },
-            child: Text(
-              'Manage Shop(s)',
+      body: Center(
+        child: TextButton(
+          style: TextButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
-        ],
+          onPressed: () {
+            Get.toNamed('/manage_shops');
+          },
+          child: Text(
+            'Manage Shop(s)',
+          ),
+        ),
       ),
     );
   }
