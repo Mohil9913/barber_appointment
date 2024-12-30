@@ -8,13 +8,16 @@ import 'package:get/get.dart';
 
 class ShopsController extends GetxController {
   final barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
-  RxList shops = RxList();
-  var services = [].obs;
+
   var skills = [].obs;
-  RxList employees = RxList();
   RxString latitude = ''.obs;
   RxString longitude = ''.obs;
   RxInt serviceTime = 0.obs;
+
+  RxList shops = RxList();
+  RxList shopsId = RxList();
+  RxList services = RxList();
+  RxList employees = RxList();
 
   Rx<TimeOfDay?> employeeEntryTime = Rx<TimeOfDay?>(null);
   Rx<TimeOfDay?> employeeExitTime = Rx<TimeOfDay?>(null);
@@ -107,6 +110,87 @@ class ShopsController extends GetxController {
     }
   }
 
+  Future<void> toggleShopStatus(int index, bool value) async {
+    final shop = shops[index];
+    final shopId = shopsId[index];
+
+    Get.defaultDialog(
+      barrierDismissible: false,
+      title: value
+          ? 'Mark ${shop['name']} OPEN for customers?'
+          : 'Mark ${shop['name']} CLOSED for customers?',
+      titlePadding: EdgeInsets.only(
+        top: 30,
+        left: 20,
+        right: 20,
+      ),
+      content: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20.0,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () {
+                if (Get.isDialogOpen == true) {
+                  Get.back();
+                }
+              },
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    12,
+                  ),
+                ),
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                isLoading.value = true;
+                if (Get.isDialogOpen == true) {
+                  Get.back();
+                }
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('shop')
+                      .doc(shopId)
+                      .update({"status": value}).then((_) {
+                    shops[index] = {...shop, "status": value};
+                    shops.refresh();
+                    isLoading.value = false;
+                  });
+                } catch (e) {
+                  Get.snackbar(
+                      'Something went wrong', 'Please try again later');
+                  log('$e');
+                  isLoading.value = false;
+                }
+              },
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    12,
+                  ),
+                ),
+              ),
+              child: Text(
+                value ? 'Mark Open' : 'Mark Close',
+                style: TextStyle(color: value ? Colors.green : Colors.red),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> fetchShops() async {
     try {
       DocumentSnapshot barberDoc = await FirebaseFirestore.instance
@@ -116,12 +200,23 @@ class ShopsController extends GetxController {
 
       if (barberDoc.exists) {
         final List<dynamic> fetchedShops = barberDoc['shops'] ?? [];
-        shops.value = fetchedShops;
+        for (String shopId in fetchedShops) {
+          DocumentSnapshot shopDoc = await FirebaseFirestore.instance
+              .collection('shop')
+              .doc(shopId)
+              .get();
+
+          if (shopDoc.exists) {
+            shopsId.add(shopDoc.id);
+            shops.add(shopDoc.data() as Map<String, dynamic>);
+          }
+        }
       } else {
         Get.offAllNamed('/login_screen');
       }
     } catch (e) {
       Get.snackbar('Error Fetching shops', '$e');
+      log('$e');
     }
   }
 

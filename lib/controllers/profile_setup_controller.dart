@@ -62,7 +62,7 @@ class ProfileSetupController extends GetxController {
       return publicUrl;
     } catch (e) {
       isLoading.value = false;
-      print('Error uploading image: $e');
+      log('Error uploading image: $e');
       Get.snackbar('Upload Error', 'Failed to upload image. Please try again.');
       return null;
     }
