@@ -1,4 +1,4 @@
-import 'package:barber_appointment/controllers/shops_controller.dart';
+import 'package:barber_appointment/controllers/manage_shop_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,7 +6,8 @@ import 'package:get/get.dart';
 class ManageShops extends StatelessWidget {
   ManageShops({super.key});
 
-  final ShopsController shopsController = Get.put(ShopsController());
+  final ManageShopController manageShopController =
+      Get.put(ManageShopController());
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +16,7 @@ class ManageShops extends StatelessWidget {
         title: Text('Manage your Shops'),
       ),
       body: FutureBuilder(
-        future: shopsController.fetchShops(),
+        future: manageShopController.fetchShops(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -28,35 +29,34 @@ class ManageShops extends StatelessWidget {
           } else {
             return Obx(
               () {
-                if (shopsController.shops.isEmpty) {
+                if (manageShopController.shopsInFirebase.isEmpty) {
                   return const Center(
                     child: Text(
                         'No shops on your profile! Add by clicking \'+\' Button'),
                   );
                 }
-                return shopsController.isLoading.value
+                return manageShopController.isLoading.value
                     ? Center(child: CupertinoActivityIndicator())
                     : Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListView.builder(
-                          itemCount: shopsController.shops.length,
+                          itemCount:
+                              manageShopController.shopsInFirebase.length,
                           itemBuilder: (context, index) {
-                            final shop = shopsController.shops[index];
+                            final shop =
+                                manageShopController.shopsInFirebase[index];
                             return Card(
                               child: Padding(
                                 padding: const EdgeInsets.all(15.0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Checkbox(
-                                        value: shop['status'],
-                                        onChanged: (value) {
-                                          shopsController.toggleShopStatus(
-                                              index, value!);
-                                        }),
                                     Expanded(
                                       child: InkWell(
-                                        onTap: () {},
+                                        onTap: () {
+                                          manageShopController.showShopDetails(
+                                              context, index);
+                                        },
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -77,6 +77,12 @@ class ManageShops extends StatelessWidget {
                                         ),
                                       ),
                                     ),
+                                    Checkbox(
+                                        value: shop['status'],
+                                        onChanged: (value) {
+                                          manageShopController.toggleShopStatus(
+                                              index, value!);
+                                        }),
                                   ],
                                 ),
                               ),
