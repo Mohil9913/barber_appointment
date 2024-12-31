@@ -1,10 +1,12 @@
 import 'package:barber_appointment/controllers/login_controller.dart';
+import 'package:barber_appointment/controllers/manage_shop_controller.dart';
+import 'package:barber_appointment/controllers/profile_setup_controller.dart';
+import 'package:barber_appointment/controllers/shops_controller.dart';
 import 'package:barber_appointment/firebase_options.dart';
 import 'package:barber_appointment/views/add_shop.dart';
 import 'package:barber_appointment/views/barber_home.dart';
 import 'package:barber_appointment/views/customer_home.dart';
 import 'package:barber_appointment/views/login_screen.dart';
-import 'package:barber_appointment/views/manage_services.dart';
 import 'package:barber_appointment/views/manage_shops.dart';
 import 'package:barber_appointment/views/profile_setup.dart';
 import 'package:barber_appointment/views/user_type_selection.dart';
@@ -29,13 +31,16 @@ class RunApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final LoginController loginController = Get.put(LoginController());
 
+    Get.put(ManageShopController());
+    Get.put(ProfileSetupController());
+    Get.put(ShopsController());
+
     return GetMaterialApp(
       theme: ThemeData.dark(),
       getPages: [
         GetPage(name: '/login_screen', page: () => LoginScreen()),
         GetPage(name: '/user_selection', page: () => UserTypeSelection()),
         GetPage(name: '/profile_setup', page: () => ProfileSetup()),
-        GetPage(name: '/manage_services', page: () => ManageServices()),
         GetPage(name: '/customer_home', page: () => CustomerHome()),
         GetPage(name: '/barber_home', page: () => BarberHome()),
         GetPage(name: '/manage_shops', page: () => ManageShops()),

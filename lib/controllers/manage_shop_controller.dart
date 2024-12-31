@@ -1,15 +1,27 @@
 import 'dart:developer';
 
+import 'package:barber_appointment/controllers/shops_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+final ShopsController shopsController = Get.find();
+
 class ManageShopController extends GetxController {
   final barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
   var isLoading = false.obs;
 
+  //stores backup of data before updating shop, to rollback in case of partial update
+  String? currentId;
+  String? currentName;
+  List? currentEmployees;
+  List? currentServices;
+  String? currentLat;
+  String? currentLong;
+
+  //stores data received from firebase
   RxList shopsInFirebase = RxList();
   RxList shopsIdInFirebase = RxList();
   RxList employeesInFirebase = RxList();
@@ -17,7 +29,18 @@ class ManageShopController extends GetxController {
   RxList servicesInFirebase = RxList();
   RxList servicesIdInFirebase = RxList();
 
+  TimeOfDay stringToTimeOfDay(String timeString) {
+    final parts = timeString.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
   Future<void> fetchShops() async {
+    shopsIdInFirebase.clear();
+    shopsInFirebase.clear();
+
     try {
       DocumentSnapshot barberDoc = await FirebaseFirestore.instance
           .collection('barber')
@@ -64,6 +87,11 @@ class ManageShopController extends GetxController {
           employeesIdInFirebase.add(employeeDoc.id);
           employeesInFirebase.add(employeeDoc.data() as Map<String, dynamic>);
         }
+      }
+
+      for (var employee in employeesInFirebase) {
+        employee['entryTime'] = stringToTimeOfDay(employee['entryTime']);
+        employee['exitTime'] = stringToTimeOfDay(employee['exitTime']);
       }
 
       for (String service in shop['services']) {
@@ -165,6 +193,7 @@ class ManageShopController extends GetxController {
 
   Future<void> showShopDetails(BuildContext context, int index) async {
     final shop = shopsInFirebase[index];
+    final shopId = shopsIdInFirebase[index];
 
     Get.bottomSheet(
       isScrollControlled: true,
@@ -228,7 +257,14 @@ class ManageShopController extends GetxController {
                                         return Padding(
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 4.0),
-                                          child: Text(service['serviceName']),
+                                          child: Text(
+                                            '${service['serviceName']} | ₹${service['servicePrice']} | Time Slots - ${service['serviceTime']}',
+                                            style: service['serviceStatus']
+                                                ? TextStyle()
+                                                : TextStyle(
+                                                    decoration: TextDecoration
+                                                        .lineThrough),
+                                          ),
                                         );
                                       },
                                     ),
@@ -263,7 +299,14 @@ class ManageShopController extends GetxController {
                                         return Padding(
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 4.0),
-                                          child: Text(employee['employeeName']),
+                                          child: Text(
+                                            '${employee['employeeName']} | ${MaterialLocalizations.of(context).formatTimeOfDay(employee['entryTime'])} - ${MaterialLocalizations.of(context).formatTimeOfDay(employee['exitTime'])}',
+                                            style: employee['employeeStatus']
+                                                ? TextStyle()
+                                                : TextStyle(
+                                                    decoration: TextDecoration
+                                                        .lineThrough),
+                                          ),
                                         );
                                       },
                                     ),
@@ -271,7 +314,25 @@ class ManageShopController extends GetxController {
                               ),
                             ),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                currentId = shopId;
+                                currentName = shop['name'];
+                                currentEmployees = employeesInFirebase;
+                                currentServices = servicesInFirebase;
+                                currentLat = shop['location']['lat'];
+                                currentLong = shop['location']['long'];
+
+                                shopsController.shopNameController.text =
+                                    shop['name'];
+                                shopsController.services = servicesInFirebase;
+                                shopsController.employees = employeesInFirebase;
+                                shopsController.latitude.value =
+                                    shop['location']['lat'];
+                                shopsController.longitude.value =
+                                    shop['location']['long'];
+                                Get.toNamed('/add_shop',
+                                    arguments: {'isEdit': true});
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

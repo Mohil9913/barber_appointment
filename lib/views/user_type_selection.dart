@@ -6,8 +6,7 @@ import 'package:get/get.dart';
 class UserTypeSelection extends StatelessWidget {
   UserTypeSelection({super.key});
 
-  final ProfileSetupController profileSetupController =
-      Get.put(ProfileSetupController());
+  final ProfileSetupController profileSetupController = Get.find();
 
   @override
   Widget build(BuildContext context) {

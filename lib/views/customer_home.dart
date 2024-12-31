@@ -6,8 +6,7 @@ import 'package:get/get.dart';
 class CustomerHome extends StatelessWidget {
   CustomerHome({super.key});
 
-  final ProfileSetupController profileSetupController =
-      Get.put(ProfileSetupController());
+  final ProfileSetupController profileSetupController = Get.find();
 
   @override
   Widget build(BuildContext context) {

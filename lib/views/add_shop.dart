@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:barber_appointment/controllers/manage_shop_controller.dart';
 import 'package:barber_appointment/controllers/shops_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,13 +9,17 @@ import 'package:get/get.dart';
 class AddShop extends StatelessWidget {
   AddShop({super.key});
 
-  final ShopsController shopsController = Get.put(ShopsController());
+  final ShopsController shopsController = Get.find();
+  final ManageShopController manageShopController = Get.find();
+  final isEdit = Get.arguments['isEdit'] as bool;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('List your shop'),
+        title: Text(isEdit
+            ? 'Edit ${shopsController.shopNameController.text.trim()}'
+            : 'List your shop'),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -24,12 +29,12 @@ class AddShop extends StatelessWidget {
           }
           if (shopsController.services.isEmpty) {
             Get.snackbar(
-                '0 Services', 'Atlest 1 service needed to register shop');
+                '0 Services', 'At-lest 1 service needed to register shop');
             return;
           }
           if (shopsController.employees.isEmpty) {
             Get.snackbar(
-                '0 Employees', 'Atlest 1 Employee needed to register shop');
+                '0 Employees', 'At-lest 1 Employee needed to register shop');
             return;
           }
           if (shopsController.latitude.value.trim().isEmpty ||
@@ -39,7 +44,7 @@ class AddShop extends StatelessWidget {
             return;
           }
           log('\n\n\n\nbarber id: ${shopsController.barberId}\n\nname: ${shopsController.shopNameController.text.trim()}\n\nservices: ${shopsController.services}\n\nemployees: ${shopsController.employees}\n\nshop location: ${shopsController.latitude.value.trim()} - ${shopsController.longitude.value.trim()}\n\n\n\n');
-          shopsController.createShopAndAddData();
+          shopsController.createShopAndAddData(manageShopController.currentId);
         },
         child: Obx(
           () => shopsController.isLoading.value

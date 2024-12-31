@@ -6,8 +6,7 @@ import 'package:get/get.dart';
 class ManageShops extends StatelessWidget {
   ManageShops({super.key});
 
-  final ManageShopController manageShopController =
-      Get.put(ManageShopController());
+  final ManageShopController manageShopController = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,8 @@ class ManageShops extends StatelessWidget {
                 if (manageShopController.shopsInFirebase.isEmpty) {
                   return const Center(
                     child: Text(
-                        'No shops on your profile! Add by clicking \'+\' Button'),
+                      'No shops on your profile! Add by clicking \'+\' Button',
+                    ),
                   );
                 }
                 return manageShopController.isLoading.value
@@ -97,7 +97,12 @@ class ManageShops extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.toNamed('/add_shop');
+          shopsController.shopNameController.clear();
+          shopsController.services.clear();
+          shopsController.employees.clear();
+          shopsController.latitude.value = '';
+          shopsController.longitude.value = '';
+          Get.toNamed('/add_shop', arguments: {'isEdit': false});
         },
         child: Icon(CupertinoIcons.plus),
       ),

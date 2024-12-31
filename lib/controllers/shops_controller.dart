@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:barber_appointment/controllers/manage_shop_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,8 @@ import 'package:get/get.dart';
 
 class ShopsController extends GetxController {
   final barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
+
+  final ManageShopController manageShopController = Get.find();
 
   var skills = [].obs;
   RxString latitude = ''.obs;
@@ -920,7 +923,7 @@ class ShopsController extends GetxController {
     );
   }
 
-  Future<void> createShopAndAddData() async {
+  Future<void> createShopAndAddData(String? shopId) async {
     isLoading.value = true;
 
     final shopName = shopNameController.text;
@@ -929,27 +932,41 @@ class ShopsController extends GetxController {
     DocumentReference? shopRef;
 
     try {
-      final shopData = {
-        "status": true,
-        "name": shopName,
-        "location": {"lat": latitude.value, "long": longitude.value},
-        "customer": [],
-        "appointments": [],
-        "employees": [],
-        "services": [],
-        "exceptions": []
-      };
+      if (shopId != null && shopId.isNotEmpty) {
+        //when shop under update, just modify few data items in existing shop - excluding customers and appointments data
+        shopRef = FirebaseFirestore.instance.collection('shop').doc(shopId);
 
-      shopRef =
-          await FirebaseFirestore.instance.collection('shop').add(shopData);
+        await shopRef.update({
+          'employees': [],
+          'services': [],
+          'location': {"lat": latitude.value, "long": longitude.value},
+          'name': shopName,
+        });
+      } else {
+        final shopData = {
+          "status": true,
+          "name": shopName,
+          "location": {"lat": latitude.value, "long": longitude.value},
+          "customer": [],
+          "appointments": [],
+          "employees": [],
+          "services": [],
+          "exceptions": []
+        };
 
-      await FirebaseFirestore.instance
-          .collection('barber')
-          .doc(barberId)
-          .update({
-        "shops": FieldValue.arrayUnion([shopRef.id])
-      });
+        //create doc for new shop in shop collection
+        shopRef =
+            await FirebaseFirestore.instance.collection('shop').add(shopData);
 
+        await FirebaseFirestore.instance
+            .collection('barber')
+            .doc(barberId)
+            .update({
+          "shops": FieldValue.arrayUnion([shopRef.id])
+        });
+      }
+
+      //create services in service collection and append ids to local list
       for (var service in services) {
         final serviceData = {
           "serviceStatus": service['serviceStatus'] ?? true,
@@ -966,6 +983,7 @@ class ShopsController extends GetxController {
         serviceIds.add(serviceRef.id);
       }
 
+      //create employees in employee collection and append ids to local list
       for (var employee in employees) {
         final employeeData = {
           "employeeName": employee['employeeName'],
@@ -983,6 +1001,7 @@ class ShopsController extends GetxController {
         employeeIds.add(employeeRef.id);
       }
 
+      //append services & employees ids to shop lists
       await FirebaseFirestore.instance
           .collection('shop')
           .doc(shopRef.id)
@@ -992,9 +1011,26 @@ class ShopsController extends GetxController {
       });
 
       Get.offAllNamed('/barber_home');
-      Get.snackbar('$shopName created successfully',
+      Get.snackbar(
+          shopId != null
+              ? '$shopName updated successfully'
+              : '$shopName created successfully',
           'Your shop with all services and employees is now listed!');
     } catch (e, stackTrace) {
+      //if updating shop goes wrong, updates made on shop will be reverted
+      if (shopId != null && shopId.isNotEmpty && shopRef != null) {
+        await shopRef.update({
+          'name': manageShopController.currentName,
+          'employees': manageShopController.currentEmployees,
+          'services': manageShopController.currentServices,
+          'location': {
+            "lat": manageShopController.currentLat,
+            "long": manageShopController.currentLong
+          },
+        });
+      }
+
+      //delete partially created shop and data linked to it
       if (shopRef != null) {
         await FirebaseFirestore.instance
             .collection('shop')
@@ -1009,6 +1045,7 @@ class ShopsController extends GetxController {
         });
       }
 
+      //removes partially created services
       for (var serviceId in serviceIds) {
         await FirebaseFirestore.instance
             .collection('service')
@@ -1016,6 +1053,7 @@ class ShopsController extends GetxController {
             .delete();
       }
 
+      //removes partially created employees
       for (var employeeId in employeeIds) {
         await FirebaseFirestore.instance
             .collection('employee')
@@ -1024,9 +1062,16 @@ class ShopsController extends GetxController {
       }
 
       log('Error: $e\n\nStacktrace: $stackTrace');
-      Get.snackbar('Error Creating Shop', '$e');
+      Get.snackbar(
+          shopId != null ? 'Error Updating Shop' : 'Error Creating Shop', '$e');
     } finally {
       isLoading.value = false;
+      manageShopController.currentId = '';
+      manageShopController.currentName = '';
+      manageShopController.currentEmployees = [];
+      manageShopController.currentServices = [];
+      manageShopController.currentLat = '';
+      manageShopController.currentLong = '';
     }
   }
 }
