@@ -41,7 +41,6 @@ class RunApp extends StatelessWidget {
         GetPage(name: '/manage_shops', page: () => ManageShops()),
         GetPage(name: '/add_shop', page: () => AddShop()),
       ],
-      // Navigate based on the login state
       home: FutureBuilder<void>(
         future:
             Future.delayed(Duration.zero, () => loginController.checkIfExist()),
