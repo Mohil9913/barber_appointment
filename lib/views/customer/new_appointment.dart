@@ -47,7 +47,7 @@ class NewAppointment extends StatelessWidget {
                             return Card(
                               child: InkWell(
                                 onTap: () {
-                                  customerController.selectedIndex.value =
+                                  customerController.selectedShopIndex.value =
                                       index;
                                   Get.toNamed('/select_service');
                                 },

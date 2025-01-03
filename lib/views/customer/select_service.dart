@@ -31,7 +31,7 @@ class SelectService extends StatelessWidget {
                 if (customerController.servicesInFirebase.isEmpty) {
                   return Center(
                     child: Text(
-                      'No Services in "${customerController.shopsInFirebase[customerController.selectedIndex.value]['name']}"',
+                      'No Services in "${customerController.shopsInFirebase[customerController.selectedShopIndex.value]['name']}"',
                     ),
                   );
                 }

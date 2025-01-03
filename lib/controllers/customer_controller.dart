@@ -26,7 +26,8 @@ class CustomerController extends GetxController {
   RxList servicesInFirebase = RxList();
   RxList servicesIdInFirebase = RxList();
 
-  RxInt selectedIndex = RxInt(0);
+  RxInt selectedShopIndex = RxInt(0);
+  RxInt selectedEmployeeIndex = RxInt(0);
   RxList<String> services = <String>[].obs;
   RxInt totalAmount = RxInt(0);
   RxInt totalTimeSlots = RxInt(0);
@@ -141,7 +142,7 @@ class CustomerController extends GetxController {
   }
 
   Future<void> fetchServices() async {
-    final shop = shopsInFirebase[selectedIndex.value];
+    final shop = shopsInFirebase[selectedShopIndex.value];
     servicesInFirebase.clear();
     servicesIdInFirebase.clear();
 
@@ -164,7 +165,7 @@ class CustomerController extends GetxController {
   }
 
   Future<void> fetchEmployee() async {
-    final shop = shopsInFirebase[selectedIndex.value];
+    final shop = shopsInFirebase[selectedShopIndex.value];
     employeesInFirebase.clear();
     employeesIdInFirebase.clear();
 
@@ -191,7 +192,232 @@ class CustomerController extends GetxController {
     }
   }
 
-  void calculateTimeAndPrice(BuildContext context, int index) {
+  Future<void> createAppointment({
+    required String shopId,
+    required String employeeId,
+    required String timeSlot,
+  }) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    WriteBatch batch = firestore.batch();
+
+    String? appointmentId;
+    bool customerUpdated = false;
+    bool shopUpdated = false;
+    bool employeeUpdated = false;
+    DateTime? from;
+    DateTime? to;
+
+    try {
+      DateTime currentDate = DateTime.now();
+
+      DocumentReference appointmentRef =
+          firestore.collection('appointment').doc();
+      appointmentId = appointmentRef.id;
+
+      batch.set(appointmentRef, {
+        'status': true,
+        'shopId': shopId,
+        'employeeId': employeeId,
+        'customerId': customerId,
+        'services': services,
+        'date': Timestamp.fromDate(currentDate),
+        'timeSlot': timeSlot,
+        'amount': totalAmount.value,
+      });
+
+      DocumentReference customerRef =
+          firestore.collection('customer').doc(customerId);
+      batch.update(customerRef, {
+        'appointments': FieldValue.arrayUnion([appointmentId]),
+      });
+      customerUpdated = true;
+
+      DocumentReference shopRef = firestore.collection('shop').doc(shopId);
+      batch.update(shopRef, {
+        'appointments': FieldValue.arrayUnion([appointmentId]),
+        'customer': FieldValue.arrayUnion([customerId]),
+      });
+      shopUpdated = true;
+
+      List<String> timeRange = timeSlot.split(' - ');
+      DateTime fromTime = DateFormat('hh:mm a').parse(timeRange[0]);
+      DateTime toTime = DateFormat('hh:mm a').parse(timeRange[1]);
+      from = DateTime(currentDate.year, currentDate.month, currentDate.day,
+          fromTime.hour, fromTime.minute);
+      to = DateTime(currentDate.year, currentDate.month, currentDate.day,
+          toTime.hour, toTime.minute);
+
+      DocumentReference employeeRef =
+          firestore.collection('employee').doc(employeeId);
+      batch.update(employeeRef, {
+        'exceptions': FieldValue.arrayUnion([
+          {
+            'type': 'appointment',
+            'date': Timestamp.fromDate(currentDate),
+            'from': Timestamp.fromDate(from),
+            'to': Timestamp.fromDate(to),
+          }
+        ]),
+      });
+      employeeUpdated = true;
+
+      await batch.commit();
+
+      Get.snackbar('Appointment Booked',
+          'Your appointment has been successfully booked!');
+    } catch (e) {
+      try {
+        if (appointmentId != null) {
+          await firestore.collection('appointment').doc(appointmentId).delete();
+        }
+        if (customerUpdated) {
+          await firestore.collection('customer').doc(customerId).update({
+            'appointments': FieldValue.arrayRemove([appointmentId]),
+          });
+        }
+        if (shopUpdated) {
+          await firestore.collection('shop').doc(shopId).update({
+            'appointments': FieldValue.arrayRemove([appointmentId]),
+            'customers': FieldValue.arrayRemove([customerId]),
+          });
+        }
+        if (employeeUpdated) {
+          DocumentReference employeeRef =
+              firestore.collection('employee').doc(employeeId);
+          DocumentSnapshot employeeSnapshot = await employeeRef.get();
+          if (employeeSnapshot.exists) {
+            List<dynamic> exceptions = employeeSnapshot['exceptions'] ?? [];
+            List<Map<String, dynamic>> updatedExceptions = exceptions
+                .map((exception) => exception as Map<String, dynamic>)
+                .where((exception) =>
+                    exception['from'] != Timestamp.fromDate(from!))
+                .toList();
+
+            await employeeRef.update({'exceptions': updatedExceptions});
+          }
+        }
+      } catch (rollbackError) {
+        log('Rollback Error: $rollbackError');
+      }
+      log('Error creating appointment: $e');
+      Get.snackbar('Error', 'Could not create the appointment: $e');
+    }
+  }
+
+  void appointmentSummaryDialog(BuildContext context, String shopName,
+      String employeeName, String timeSlot) {
+    Get.defaultDialog(
+      title: 'Appointment Details',
+      titlePadding: const EdgeInsets.only(
+        top: 30,
+      ),
+      content: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: 10.0,
+          horizontal: 30.0,
+        ),
+        child: Column(
+          children: [
+            RichText(
+              text: TextSpan(
+                children: <TextSpan>[
+                  const TextSpan(text: 'Book you appointment at '),
+                  TextSpan(
+                    text: shopName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const TextSpan(text: ' with '),
+                  TextSpan(
+                    text: employeeName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const TextSpan(text: ' for '),
+                  TextSpan(
+                    text: services.join(', '),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const TextSpan(text: ' at '),
+                  TextSpan(
+                    text: '$timeSlot.',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const TextSpan(text: '\n\nTotal Amount: '),
+                  TextSpan(
+                    text: '$totalAmount',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    if (Get.isDialogOpen ?? false) {
+                      Get.back();
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (Get.isDialogOpen ?? false) {
+                      Get.back();
+                    }
+                    createAppointment(
+                      shopId: shopsIdInFirebase[selectedShopIndex.value],
+                      employeeId:
+                          employeesIdInFirebase[selectedEmployeeIndex.value],
+                      timeSlot: timeSlot,
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'Book Appointment',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void calculateTimeAndPrice(BuildContext context, int employeeIndex) {
+    selectedEmployeeIndex.value = employeeIndex;
     totalAmount.value = 0;
     totalTimeSlots.value = 0;
 
@@ -218,7 +444,7 @@ class CustomerController extends GetxController {
               ),
             ),
             child: FutureBuilder<List<String>>(
-              future: calculateAvailableSlots(index, totalTimeSlots.value),
+              future: calculateAvailableSlots(totalTimeSlots.value),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CupertinoActivityIndicator());
@@ -235,8 +461,13 @@ class CustomerController extends GetxController {
                         return ListTile(
                           title: Text(snapshot.data![index]),
                           onTap: () {
-                            Get.snackbar(
-                                'Selected Time Slot', snapshot.data![index]);
+                            appointmentSummaryDialog(
+                              context,
+                              shopsInFirebase[selectedShopIndex.value]['name'],
+                              employeesInFirebase[employeeIndex]
+                                  ['employeeName'],
+                              snapshot.data![index],
+                            );
                           },
                         );
                       },
@@ -251,14 +482,13 @@ class CustomerController extends GetxController {
     );
   }
 
-  Future<List<String>> calculateAvailableSlots(
-      int index, int requiredBlocks) async {
+  Future<List<String>> calculateAvailableSlots(int requiredBlocks) async {
     try {
-      final employeeDoc = employeesInFirebase[index];
+      final employeeDoc = employeesInFirebase[selectedEmployeeIndex.value];
 
       TimeOfDay entryTime = employeeDoc['entryTime'];
       TimeOfDay exitTime = employeeDoc['exitTime'];
-      List<dynamic>? exceptionList = employeeDoc['exceptionList'];
+      List<dynamic>? exceptionList = employeeDoc['exceptions'];
 
       exceptionList ??= [];
 
@@ -271,34 +501,59 @@ class CustomerController extends GetxController {
       DateTime entryDateTime = timeOfDayToDateTime(entryTime);
       DateTime exitDateTime = timeOfDayToDateTime(exitTime);
 
+      // Generate all possible time slots within entry and exit times
       List<DateTime> allSlots = [];
       DateTime currentSlot = entryDateTime;
-
       while (currentSlot.isBefore(exitDateTime)) {
         allSlots.add(currentSlot);
         currentSlot = currentSlot.add(Duration(minutes: 30));
       }
 
+      // Filter for future slots only
       List<DateTime> futureSlots =
           allSlots.where((slot) => slot.isAfter(now)).toList();
 
+      // Sort exception list by 'from' time
+      exceptionList.sort((a, b) {
+        DateTime fromA = a['from'].toDate();
+        DateTime fromB = b['from'].toDate();
+        return fromA.compareTo(fromB);
+      });
+
+      List<DateTime> unavailableSlots = [];
+
+      // Process all exceptions and mark the unavailable slots
+      for (var exception in exceptionList) {
+        DateTime exceptionStart = exception['from'].toDate();
+        DateTime exceptionEnd = exception['to'].toDate();
+
+        if (exception['type'] == 'appointment') {
+          // For 'appointment' type, block out the time range
+          DateTime currentSlot = exceptionStart;
+          while (currentSlot.isBefore(exceptionEnd)) {
+            unavailableSlots.add(currentSlot);
+            currentSlot = currentSlot.add(Duration(minutes: 30));
+          }
+        }
+      }
+
+      // Remove unavailable slots from the list of available slots
       List<DateTime> availableSlots = futureSlots.where((slot) {
-        return !exceptionList!.any((exception) {
-          DateTime exceptionStart = exception['start'].toDate();
-          DateTime exceptionEnd = exception['end'].toDate();
-          return slot.isAfter(exceptionStart.subtract(Duration(seconds: 1))) &&
-              slot.isBefore(exceptionEnd.add(Duration(seconds: 1)));
-        });
+        return !unavailableSlots.contains(slot);
       }).toList();
 
       List<String> groupedSlots = [];
+
+      // Group available slots into the required blocks of time
       for (int i = 0; i <= availableSlots.length - requiredBlocks; i++) {
         DateTime start = availableSlots[i];
         DateTime end = availableSlots[i + requiredBlocks - 1];
 
+        // Only add slots if the difference between start and end is equal to required blocks
         if (end.difference(start).inMinutes == (requiredBlocks - 1) * 30) {
           groupedSlots.add(
-              '${DateFormat('hh:mm a').format(start)} - ${DateFormat('hh:mm a').format(end.add(Duration(minutes: 30)))}');
+            '${DateFormat('hh:mm a').format(start)} - ${DateFormat('hh:mm a').format(end.add(Duration(minutes: 30)))}',
+          );
         }
       }
 

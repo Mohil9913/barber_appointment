@@ -31,7 +31,7 @@ class SelectEmployee extends StatelessWidget {
                 if (customerController.servicesInFirebase.isEmpty) {
                   return Center(
                     child: Text(
-                      'No Employees in "${customerController.shopsInFirebase[customerController.selectedIndex.value]['name']}"',
+                      'No Employees in "${customerController.shopsInFirebase[customerController.selectedShopIndex.value]['name']}"',
                     ),
                   );
                 }
