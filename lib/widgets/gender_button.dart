@@ -9,7 +9,8 @@ class GenderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProfileSetupController profileSetupController = Get.find();
+    final ProfileSetupController profileSetupController =
+        Get.find<ProfileSetupController>();
 
     return Obx(() {
       bool isSelected = profileSetupController.selectedGender.value == label;

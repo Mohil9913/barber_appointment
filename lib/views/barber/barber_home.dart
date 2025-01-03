@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class BarberHome extends StatelessWidget {
-  BarberHome({super.key});
+  const BarberHome({super.key});
 
   @override
   Widget build(BuildContext context) {

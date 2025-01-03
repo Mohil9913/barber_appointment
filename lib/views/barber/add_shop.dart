@@ -9,8 +9,9 @@ import 'package:get/get.dart';
 class AddShop extends StatelessWidget {
   AddShop({super.key});
 
-  final ShopsController shopsController = Get.find();
-  final ManageShopController manageShopController = Get.find();
+  final ShopsController shopsController = Get.find<ShopsController>();
+  final ManageShopController manageShopController =
+      Get.find<ManageShopController>();
   final isEdit = Get.arguments['isEdit'] as bool;
 
   @override

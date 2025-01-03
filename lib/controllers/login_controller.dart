@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
@@ -13,6 +14,93 @@ class LoginController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _verificationId = '';
+
+  final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController otpController = TextEditingController();
+
+  void confirmationDialog(BuildContext context) {
+    Get.defaultDialog(
+      title: 'Confirm Number',
+      titlePadding: const EdgeInsets.only(
+        top: 30,
+      ),
+      content: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: 10.0,
+          horizontal: 30.0,
+        ),
+        child: Column(
+          children: [
+            RichText(
+              text: TextSpan(
+                children: <TextSpan>[
+                  const TextSpan(text: 'Please confirm that '),
+                  TextSpan(
+                    text: '+91 ${phoneNumberController.text} ',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const TextSpan(
+                      text: 'is your phone number for current login.'),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    if (Get.isDialogOpen ?? false) {
+                      Get.back();
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'Back',
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (Get.isDialogOpen ?? false) {
+                      Get.back();
+                    }
+                    try {
+                      await sendOtp(phoneNumberController.text);
+                    } catch (e) {
+                      Get.snackbar('Error', 'Failed to send OTP: $e');
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'Confirm',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> checkIfExist() async {
     if (FirebaseAuth.instance.currentUser == null) {
@@ -121,6 +209,7 @@ class LoginController extends GetxController {
       );
 
       await _auth.signInWithCredential(credential);
+      otpController.text = '';
       redirectUser();
     } catch (e) {
       Get.snackbar('Invalid OTP', 'Please enter the correct OTP');

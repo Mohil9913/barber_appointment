@@ -10,9 +10,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 class ShopsController extends GetxController {
-  final barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
+  String? barberId;
 
-  final ManageShopController manageShopController = Get.find();
+  final ManageShopController manageShopController =
+      Get.find<ManageShopController>();
 
   var skills = [].obs;
   RxString latitude = ''.obs;
@@ -925,7 +926,7 @@ class ShopsController extends GetxController {
 
   Future<void> createShopAndAddData(String? shopId) async {
     isLoading.value = true;
-
+    barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
     final shopName = shopNameController.text;
     List<String> serviceIds = [];
     List<String> employeeIds = [];

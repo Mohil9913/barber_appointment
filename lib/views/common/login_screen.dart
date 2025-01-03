@@ -7,88 +7,7 @@ import 'package:get/get.dart';
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
-  final LoginController loginController = Get.find();
-  final TextEditingController phoneNumberController = TextEditingController();
-  final TextEditingController otpController = TextEditingController();
-
-  void confirmationDialog(BuildContext context) {
-    Get.defaultDialog(
-      title: 'Confirm Number',
-      titlePadding: EdgeInsets.only(
-        top: 30,
-      ),
-      content: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 10.0,
-          horizontal: 30.0,
-        ),
-        child: Column(
-          children: [
-            RichText(
-              text: TextSpan(
-                children: <TextSpan>[
-                  TextSpan(text: 'Please confirm that '),
-                  TextSpan(
-                    text: '+91 ${phoneNumberController.text} ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(text: 'is your phone number for current login.'),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 5,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    if (Get.isDialogOpen == true) {
-                      Get.back();
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        12,
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    'Back',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (Get.isDialogOpen == true) {
-                      Get.back();
-                    }
-                    await loginController.sendOtp(phoneNumberController.text);
-                  },
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        12,
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    'Confirm',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final LoginController loginController = Get.find<LoginController>();
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +101,8 @@ class LoginScreen extends StatelessWidget {
                               Expanded(
                                 child: TextField(
                                   autofocus: false,
-                                  controller: phoneNumberController,
+                                  controller:
+                                      loginController.phoneNumberController,
                                   keyboardType: TextInputType.number,
                                   maxLength: 10,
                                   enabled: loginController
@@ -215,7 +135,7 @@ class LoginScreen extends StatelessWidget {
                                 child: TextField(
                                   maxLength: 6,
                                   autofocus: true,
-                                  controller: otpController,
+                                  controller: loginController.otpController,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: <TextInputFormatter>[
                                     // FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
@@ -243,9 +163,10 @@ class LoginScreen extends StatelessWidget {
                         ),
                         onPressed: () {
                           if (!loginController.otpGenerated.value) {
-                            confirmationDialog(context);
+                            loginController.confirmationDialog(context);
                           } else {
-                            loginController.verifyOtp(otpController.text);
+                            loginController
+                                .verifyOtp(loginController.otpController.text);
                           }
                         },
                         child: Obx(

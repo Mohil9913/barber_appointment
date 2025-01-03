@@ -6,7 +6,8 @@ import 'package:get/get.dart';
 class ManageShops extends StatelessWidget {
   ManageShops({super.key});
 
-  final ManageShopController manageShopController = Get.find();
+  final ManageShopController manageShopController =
+      Get.find<ManageShopController>();
 
   @override
   Widget build(BuildContext context) {

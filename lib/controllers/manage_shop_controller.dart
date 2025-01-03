@@ -7,10 +7,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-final ShopsController shopsController = Get.find();
+final ShopsController shopsController = Get.put(ShopsController());
 
 class ManageShopController extends GetxController {
-  final barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
+  String? barberId;
   var isLoading = false.obs;
 
   //stores backup of data before updating shop, to rollback in case of partial update
@@ -42,6 +42,8 @@ class ManageShopController extends GetxController {
     shopsInFirebase.clear();
 
     try {
+      barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
+
       DocumentSnapshot barberDoc = await FirebaseFirestore.instance
           .collection('barber')
           .doc(barberId)
