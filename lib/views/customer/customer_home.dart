@@ -14,48 +14,152 @@ class CustomerHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Barber Appointment'),
-        actions: [
-          Obx(
-            () => IconButton(
-              onPressed: () {
-                customerController.showCustomerData(context);
-              },
-              icon: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.purpleAccent.withValues(alpha: 0.3),
-                    width: 2,
+    return FutureBuilder(
+      future: customerController.fetchAppointments(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CupertinoActivityIndicator(),
+          );
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text('Error: ${snapshot.error}'),
+          );
+        } else {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Barber Appointment'),
+              actions: [
+                Obx(
+                  () => IconButton(
+                    onPressed: () {
+                      customerController.showCustomerData(context);
+                    },
+                    icon: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.purpleAccent.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundImage: customerController.imageUrl.value == ''
+                            ? AssetImage(
+                                'assets/images/login_screen/customer.jpeg',
+                              )
+                            : CachedNetworkImageProvider(
+                                customerController.imageUrl.value,
+                              ),
+                      ),
+                    ),
                   ),
                 ),
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundImage: CachedNetworkImageProvider(
-                        customerController.imageUrl.value,
-                      ) ??
-                      AssetImage('assets/images/login_screen/customer.jpeg'),
-                ),
+              ],
+            ),
+            floatingActionButton: Obx(
+              () => FloatingActionButton(
+                onPressed: () {
+                  Get.toNamed('/new_appointment');
+                },
+                child: customerController.isLoading.value
+                    ? CupertinoActivityIndicator()
+                    : Icon(Icons.note_add_outlined),
               ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: Obx(
-        () => FloatingActionButton(
-          onPressed: () {
-            Get.toNamed('/new_appointment');
-          },
-          child: customerController.isLoading.value
-              ? CupertinoActivityIndicator()
-              : Icon(Icons.note_add_outlined),
-        ),
-      ),
-      body: Center(
-        child: Text('No Appointments Yet!'),
-      ),
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: ListView.builder(
+                itemCount: customerController.appointmentsInFirebase.length,
+                itemBuilder: (context, index) {
+                  final appointment =
+                      customerController.appointmentsInFirebase[index];
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${index + 1}. ',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                FutureBuilder<String>(
+                                  future: customerController
+                                      .fetchShopName(appointment['shopId']),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return Text('Loading...');
+                                    } else if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    } else {
+                                      return Text(
+                                        snapshot.data ?? 'No Shop Found',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                      );
+                                    }
+                                  },
+                                ),
+                                Divider(),
+                                FutureBuilder<String>(
+                                  future: customerController.fetchEmployeeName(
+                                      appointment['employeeId']),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return Text('Loading...');
+                                    } else if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    } else {
+                                      return Text(
+                                        'Berber: ${snapshot.data}' ??
+                                            'No Employee Found',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall,
+                                      );
+                                    }
+                                  },
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                    'Date: ${customerController.formatFirebaseTimestamp(appointment['date'])}'),
+                                SizedBox(height: 10),
+                                ...[
+                                  SizedBox(height: 5),
+                                  Wrap(
+                                    spacing: 5.0,
+                                    runSpacing: 5.0,
+                                    children: List<Widget>.generate(
+                                      appointment['services'].length,
+                                      (skillIndex) => Text(
+                                        appointment['services'][skillIndex],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Text('₹ ${appointment['amount']}'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 }

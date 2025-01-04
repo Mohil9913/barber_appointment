@@ -7,11 +7,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-final ShopsController shopsController = Get.put(ShopsController());
+final ShopsController shopsController = Get.find<ShopsController>();
 
 class ManageShopController extends GetxController {
   String? barberId;
   var isLoading = false.obs;
+  final RxBool isEdit = RxBool(false);
 
   //stores backup of data before updating shop, to rollback in case of partial update
   String? currentId;
@@ -38,8 +39,8 @@ class ManageShopController extends GetxController {
   }
 
   Future<void> fetchShops() async {
-    shopsIdInFirebase.clear();
-    shopsInFirebase.clear();
+    shopsIdInFirebase.value = [];
+    shopsInFirebase.value = [];
 
     try {
       barberId = FirebaseAuth.instance.currentUser!.phoneNumber;
@@ -73,10 +74,10 @@ class ManageShopController extends GetxController {
 
   Future<void> fetchEmployeesAndServices(int index) async {
     final shop = shopsInFirebase[index];
-    employeesInFirebase.clear();
-    employeesIdInFirebase.clear();
-    servicesInFirebase.clear();
-    servicesIdInFirebase.clear();
+    employeesInFirebase.value = [];
+    employeesIdInFirebase.value = [];
+    servicesInFirebase.value = [];
+    servicesIdInFirebase.value = [];
 
     try {
       for (String employee in shop['employees']) {
@@ -332,8 +333,12 @@ class ManageShopController extends GetxController {
                                     shop['location']['lat'];
                                 shopsController.longitude.value =
                                     shop['location']['long'];
-                                Get.toNamed('/add_shop',
-                                    arguments: {'isEdit': true});
+                                isEdit.value = true;
+
+                                log('\n\n\nEditing : $shop\n\n');
+                                log('Name : ${shopsController.shopNameController.text}\nservices : ${shopsController.services}\nemployees : ${shopsController.employees}, lat&long : ${shopsController.latitude.value}-${shopsController.longitude.value}\n\n');
+
+                                Get.toNamed('/add_shop');
                               },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

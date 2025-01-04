@@ -17,7 +17,8 @@ class SelectEmployee extends StatelessWidget {
       body: FutureBuilder(
         future: customerController.fetchEmployee(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              customerController.isLoading.value) {
             return Center(
               child: CupertinoActivityIndicator(),
             );
@@ -28,7 +29,7 @@ class SelectEmployee extends StatelessWidget {
           } else {
             return Obx(
               () {
-                if (customerController.servicesInFirebase.isEmpty) {
+                if (customerController.employeesInFirebase.isEmpty) {
                   return Center(
                     child: Text(
                       'No Employees in "${customerController.shopsInFirebase[customerController.selectedShopIndex.value]['name']}"',

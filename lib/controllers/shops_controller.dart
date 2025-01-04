@@ -19,9 +19,9 @@ class ShopsController extends GetxController {
   RxString latitude = ''.obs;
   RxString longitude = ''.obs;
   RxInt serviceTime = 0.obs;
-  RxList services = RxList();
-  RxList employees = RxList();
-  RxList shops = RxList();
+  RxList services = [].obs;
+  RxList employees = [].obs;
+  RxList shops = [].obs;
   Rx<TimeOfDay?> employeeEntryTime = Rx<TimeOfDay?>(null);
   Rx<TimeOfDay?> employeeExitTime = Rx<TimeOfDay?>(null);
   var isLoading = false.obs;
@@ -933,7 +933,7 @@ class ShopsController extends GetxController {
     DocumentReference? shopRef;
 
     try {
-      if (shopId != null && shopId.isNotEmpty) {
+      if (manageShopController.isEdit.value) {
         //when shop under update, just modify few data items in existing shop - excluding customers and appointments data
         shopRef = FirebaseFirestore.instance.collection('shop').doc(shopId);
 
@@ -1013,7 +1013,7 @@ class ShopsController extends GetxController {
 
       Get.offAllNamed('/barber_home');
       Get.snackbar(
-          shopId != null
+          manageShopController.isEdit.value
               ? '$shopName updated successfully'
               : '$shopName created successfully',
           'Your shop with all services and employees is now listed!');
@@ -1065,14 +1065,15 @@ class ShopsController extends GetxController {
       log('Error: $e\n\nStacktrace: $stackTrace');
       Get.snackbar(
           shopId != null ? 'Error Updating Shop' : 'Error Creating Shop', '$e');
-    } finally {
-      isLoading.value = false;
-      manageShopController.currentId = '';
-      manageShopController.currentName = '';
-      manageShopController.currentEmployees = [];
-      manageShopController.currentServices = [];
-      manageShopController.currentLat = '';
-      manageShopController.currentLong = '';
     }
+    // finally {
+    //   isLoading.value = false;
+    //   manageShopController.currentId = '';
+    //   manageShopController.currentName = '';
+    //   manageShopController.currentEmployees = [];
+    //   manageShopController.currentServices = [];
+    //   manageShopController.currentLat = '';
+    //   manageShopController.currentLong = '';
+    // }
   }
 }

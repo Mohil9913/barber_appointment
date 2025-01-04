@@ -8,10 +8,10 @@ import 'package:get/get.dart';
 class InitialBinding implements Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => ManageShopController(), fenix: true);
-    Get.lazyPut(() => ProfileSetupController(), fenix: true);
-    Get.lazyPut(() => ShopsController(), fenix: true);
-    Get.lazyPut(() => CustomerController(), fenix: true);
-    Get.lazyPut(() => LoginController(), fenix: true);
+    Get.lazyPut(() => ManageShopController());
+    Get.lazyPut(() => ProfileSetupController());
+    Get.lazyPut(() => ShopsController());
+    Get.lazyPut(() => CustomerController());
+    Get.lazyPut(() => LoginController());
   }
 }

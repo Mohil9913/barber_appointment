@@ -15,6 +15,18 @@ class ManageShops extends StatelessWidget {
       appBar: AppBar(
         title: Text('Manage your Shops'),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          manageShopController.isEdit.value = false;
+          shopsController.shopNameController.text = '';
+          shopsController.services.value = [];
+          shopsController.employees.value = [];
+          shopsController.latitude.value = '';
+          shopsController.longitude.value = '';
+          Get.toNamed('/add_shop');
+        },
+        child: Icon(CupertinoIcons.plus),
+      ),
       body: FutureBuilder(
         future: manageShopController.fetchShops(),
         builder: (context, snapshot) {
@@ -36,76 +48,60 @@ class ManageShops extends StatelessWidget {
                     ),
                   );
                 }
-                return manageShopController.isLoading.value
-                    ? Center(child: CupertinoActivityIndicator())
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: ListView.builder(
-                          itemCount:
-                              manageShopController.shopsInFirebase.length,
-                          itemBuilder: (context, index) {
-                            final shop =
-                                manageShopController.shopsInFirebase[index];
-                            return Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(15.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () {
-                                          manageShopController.showShopDetails(
-                                              context, index);
-                                        },
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              textAlign: TextAlign.left,
-                                              shop['name'],
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleLarge,
-                                            ),
-                                            Text(
-                                              'Appointments: ${shop['appointments'].length}\nServices: ${shop['services'].length}\nEmployees: ${shop['employees'].length}',
-                                              style:
-                                                  TextStyle(color: Colors.grey),
-                                            ),
-                                          ],
-                                        ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: ListView.builder(
+                    itemCount: manageShopController.shopsInFirebase.length,
+                    itemBuilder: (context, index) {
+                      final shop = manageShopController.shopsInFirebase[index];
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    manageShopController.showShopDetails(
+                                        context, index);
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        textAlign: TextAlign.left,
+                                        shop['name'],
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge,
                                       ),
-                                    ),
-                                    Checkbox(
-                                        value: shop['status'],
-                                        onChanged: (value) {
-                                          manageShopController.toggleShopStatus(
-                                              index, value!);
-                                        }),
-                                  ],
+                                      Text(
+                                        'Appointments: ${shop['appointments'].length}\nServices: ${shop['services'].length}\nEmployees: ${shop['employees'].length}',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            );
-                          },
+                              Checkbox(
+                                  value: shop['status'],
+                                  onChanged: (value) {
+                                    manageShopController.toggleShopStatus(
+                                        index, value!);
+                                  }),
+                            ],
+                          ),
                         ),
                       );
+                    },
+                  ),
+                );
               },
             );
           }
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          shopsController.shopNameController.clear();
-          shopsController.services.clear();
-          shopsController.employees.clear();
-          shopsController.latitude.value = '';
-          shopsController.longitude.value = '';
-          Get.toNamed('/add_shop', arguments: {'isEdit': false});
-        },
-        child: Icon(CupertinoIcons.plus),
       ),
     );
   }

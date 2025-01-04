@@ -12,13 +12,14 @@ class AddShop extends StatelessWidget {
   final ShopsController shopsController = Get.find<ShopsController>();
   final ManageShopController manageShopController =
       Get.find<ManageShopController>();
-  final isEdit = Get.arguments['isEdit'] as bool;
 
   @override
   Widget build(BuildContext context) {
+    log('Name : ${shopsController.shopNameController.text}\nservices : ${shopsController.services}\nemployees : ${shopsController.employees}, lat&long : ${shopsController.latitude.value}-${shopsController.longitude.value}\n\n');
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit
+        title: Text(manageShopController.isEdit.value
             ? 'Edit ${shopsController.shopNameController.text.trim()}'
             : 'List your shop'),
       ),
@@ -44,7 +45,7 @@ class AddShop extends StatelessWidget {
                 'Your current location will be marked as shop location');
             return;
           }
-          log('\n\n\n\nbarber id: ${shopsController.barberId}\n\nname: ${shopsController.shopNameController.text.trim()}\n\nservices: ${shopsController.services}\n\nemployees: ${shopsController.employees}\n\nshop location: ${shopsController.latitude.value.trim()} - ${shopsController.longitude.value.trim()}\n\n\n\n');
+
           shopsController.createShopAndAddData(manageShopController.currentId);
         },
         child: Obx(
@@ -63,7 +64,6 @@ class AddShop extends StatelessWidget {
                   height: 20,
                 ),
                 TextField(
-                  focusNode: FocusNode(),
                   controller: shopsController.shopNameController,
                   decoration: InputDecoration(
                     label: Text(
@@ -325,7 +325,7 @@ class AddShop extends StatelessWidget {
                             child: shopsController.isLoading.value
                                 ? CupertinoActivityIndicator()
                                 : Text(
-                                    'Fetch Location',
+                                    'Fetch',
                                   ),
                           ),
                         ],

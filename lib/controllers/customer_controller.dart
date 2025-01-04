@@ -15,8 +15,7 @@ class CustomerController extends GetxController {
   RxString gender = RxString('');
   RxString dob = RxString('');
   RxInt age = RxInt(0);
-  RxList? appointmentsInFirebase = RxList();
-  RxList? appointmentsIdInFirebase = RxList();
+  RxList userAppointments = RxList([]);
   var isLoading = false.obs;
 
   RxList shopsInFirebase = RxList();
@@ -25,6 +24,8 @@ class CustomerController extends GetxController {
   RxList employeesIdInFirebase = RxList();
   RxList servicesInFirebase = RxList();
   RxList servicesIdInFirebase = RxList();
+  RxList appointmentsInFirebase = RxList();
+  RxList appointmentsIdInFirebase = RxList();
 
   RxInt selectedShopIndex = RxInt(0);
   RxInt selectedEmployeeIndex = RxInt(0);
@@ -32,11 +33,11 @@ class CustomerController extends GetxController {
   RxInt totalAmount = RxInt(0);
   RxInt totalTimeSlots = RxInt(0);
 
-  @override
-  void onInit() {
-    fetchCustomerDetails();
-    super.onInit();
-  }
+  // @override
+  // void onInit() {
+  //   fetchCustomerDetails();
+  //   super.onInit();
+  // }
 
   void cacheProfileImage() {
     if (imageUrl.value.isNotEmpty) {
@@ -77,43 +78,6 @@ class CustomerController extends GetxController {
     return age;
   }
 
-  Future<void> fetchCustomerDetails() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      Get.offAllNamed('/login_screen');
-      return;
-    }
-
-    try {
-      customerId = FirebaseAuth.instance.currentUser!.phoneNumber;
-
-      DocumentSnapshot customerDoc = await FirebaseFirestore.instance
-          .collection('customer')
-          .doc(customerId)
-          .get();
-
-      if (customerDoc.exists) {
-        customerName.value = customerDoc['customerName'] ?? 'Unknown';
-        imageUrl.value = customerDoc['imageUrl'] ?? ''; // Ensure valid fallback
-        gender.value = customerDoc['customerGender'] ?? 'Unknown';
-
-        if (customerDoc['customerDOB'] != null) {
-          DateTime birthDate = customerDoc['customerDOB'].toDate();
-          dob.value = DateFormat('d MMM yyyy').format(birthDate);
-          age.value = calculateAge(birthDate);
-        }
-
-        cacheProfileImage();
-
-        appointmentsIdInFirebase!.value = customerDoc['appointments'] ?? [];
-      } else {
-        Get.offAllNamed('/login_screen');
-      }
-    } catch (e) {
-      Get.snackbar('Error Fetching Customer', '$e');
-      log('Error fetching customer details: $e');
-    }
-  }
-
   TimeOfDay stringToTimeOfDay(String timeString) {
     final parts = timeString.split(':');
     final hour = int.parse(parts[0]);
@@ -127,8 +91,10 @@ class CustomerController extends GetxController {
     shopsIdInFirebase.clear();
 
     try {
-      QuerySnapshot shopSnapshot =
-          await FirebaseFirestore.instance.collection('shop').get();
+      QuerySnapshot shopSnapshot = await FirebaseFirestore.instance
+          .collection('shop')
+          .where('status', isEqualTo: true)
+          .get();
       if (shopSnapshot.docs.isNotEmpty) {
         shopsInFirebase.value = shopSnapshot.docs.map((doc) {
           shopsIdInFirebase.add(doc.id);
@@ -154,8 +120,17 @@ class CustomerController extends GetxController {
             .get();
 
         if (serviceDoc.exists) {
-          servicesIdInFirebase.add(serviceDoc.id);
-          servicesInFirebase.add(serviceDoc.data() as Map<String, dynamic>);
+          var serviceData = serviceDoc.data() as Map<String, dynamic>;
+          if (serviceData != null && serviceData.isNotEmpty) {
+            if (serviceData['serviceStatus'] == true) {
+              servicesIdInFirebase.add(serviceDoc.id);
+              servicesInFirebase.add(serviceData);
+            }
+          } else {
+            log('Empty service data for service: $service');
+          }
+        } else {
+          log('Service document not found for ID: $service');
         }
       }
     } catch (e) {
@@ -170,25 +145,144 @@ class CustomerController extends GetxController {
     employeesIdInFirebase.clear();
 
     try {
-      for (String employee in shop['employees']) {
-        DocumentSnapshot employeeDoc = await FirebaseFirestore.instance
-            .collection('employee')
-            .doc(employee)
-            .get();
+      QuerySnapshot employeeSnapshot = await FirebaseFirestore.instance
+          .collection('employee')
+          .where(FieldPath.documentId, whereIn: shop['employees'])
+          .where('employeeStatus', isEqualTo: true)
+          .get();
 
-        if (employeeDoc.exists) {
-          employeesIdInFirebase.add(employeeDoc.id);
-          employeesInFirebase.add(employeeDoc.data() as Map<String, dynamic>);
+      for (var doc in employeeSnapshot.docs) {
+        var employeeData = doc.data() as Map<String, dynamic>;
+
+        employeesIdInFirebase.add(doc.id);
+
+        // Convert entry and exit time strings to TimeOfDay
+        if (employeeData['entryTime'] is String) {
+          employeeData['entryTime'] =
+              stringToTimeOfDay(employeeData['entryTime']);
         }
-      }
 
-      for (var employee in employeesInFirebase) {
-        employee['entryTime'] = stringToTimeOfDay(employee['entryTime']);
-        employee['exitTime'] = stringToTimeOfDay(employee['exitTime']);
+        if (employeeData['exitTime'] is String) {
+          employeeData['exitTime'] =
+              stringToTimeOfDay(employeeData['exitTime']);
+        }
+
+        employeesInFirebase.add(employeeData);
       }
     } catch (e) {
       log('Error fetching employees: $e');
       Get.snackbar('Error Fetching Employees', '$e');
+    }
+  }
+
+  Future<String> fetchShopName(String shopId) async {
+    try {
+      DocumentSnapshot shopDoc =
+          await FirebaseFirestore.instance.collection('shop').doc(shopId).get();
+
+      if (shopDoc.exists) {
+        return shopDoc['name'];
+      } else {
+        return 'SHOP DELETED';
+      }
+    } catch (e) {
+      log('Error fetching shop name: $e');
+      return 'Something went wrong';
+    }
+  }
+
+  Future<String> fetchEmployeeName(String employeeId) async {
+    try {
+      DocumentSnapshot employeeDoc = await FirebaseFirestore.instance
+          .collection('employee')
+          .doc(employeeId)
+          .get();
+
+      if (employeeDoc.exists) {
+        return employeeDoc['employeeName'];
+      } else {
+        return 'Employee DELETED';
+      }
+    } catch (e) {
+      log('Error fetching employee name: $e');
+      return 'Something went wrong';
+    }
+  }
+
+  String formatFirebaseTimestamp(Timestamp timestamp) {
+    DateTime dateTime = timestamp.toDate();
+    return DateFormat('d MMM yyyy').format(dateTime);
+  }
+
+  Future<void> fetchCustomerDetails() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      Get.offAllNamed('/login_screen');
+      return;
+    }
+
+    try {
+      customerId = FirebaseAuth.instance.currentUser!.phoneNumber;
+
+      DocumentSnapshot customerDoc = await FirebaseFirestore.instance
+          .collection('customer')
+          .doc(customerId)
+          .get();
+
+      if (customerDoc.exists) {
+        customerName.value = customerDoc['customerName'] ?? 'Unknown';
+        imageUrl.value = customerDoc['imageUrl'] ?? '';
+        gender.value = customerDoc['customerGender'] ?? 'Unknown';
+        userAppointments.value = customerDoc['appointments'] ?? [];
+
+        if (customerDoc['customerDOB'] != null) {
+          DateTime birthDate = customerDoc['customerDOB'].toDate();
+          dob.value = DateFormat('d MMM yyyy').format(birthDate);
+          age.value = calculateAge(birthDate);
+        }
+
+        cacheProfileImage();
+      } else {
+        Get.offAllNamed('/login_screen');
+      }
+    } catch (e) {
+      log('Error fetching customer details: $e');
+      Get.snackbar(
+          'Error', 'Failed to fetch customer details. Please try again.');
+    }
+  }
+
+  Future<void> fetchAppointments() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      Get.offAllNamed('/login_screen');
+      return;
+    }
+
+    try {
+      await fetchCustomerDetails();
+
+      if (userAppointments.isEmpty) {
+        log('No appointments found.');
+        return;
+      }
+
+      QuerySnapshot appointmentsSnapshot = await FirebaseFirestore.instance
+          .collection('appointment')
+          .where(FieldPath.documentId, whereIn: userAppointments)
+          .get();
+
+      appointmentsInFirebase.clear();
+      appointmentsIdInFirebase.clear();
+
+      for (var appointmentDoc in appointmentsSnapshot.docs) {
+        appointmentsIdInFirebase.add(appointmentDoc.id);
+        var appointmentData = appointmentDoc.data() as Map<String, dynamic>;
+        appointmentsInFirebase.add(appointmentData);
+      }
+
+      log('Appointments fetched successfully.');
+    } catch (e) {
+      log('Error fetching appointments: $e');
+      Get.snackbar('Error', 'Failed to fetch appointments. Please try again.');
     }
   }
 
@@ -197,6 +291,7 @@ class CustomerController extends GetxController {
     required String employeeId,
     required String timeSlot,
   }) async {
+    isLoading.value = true;
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     WriteBatch batch = firestore.batch();
 
@@ -208,6 +303,7 @@ class CustomerController extends GetxController {
     DateTime? to;
 
     try {
+      customerId = FirebaseAuth.instance.currentUser!.phoneNumber;
       DateTime currentDate = DateTime.now();
 
       DocumentReference appointmentRef =
@@ -265,6 +361,9 @@ class CustomerController extends GetxController {
 
       Get.snackbar('Appointment Booked',
           'Your appointment has been successfully booked!');
+      isLoading.value = false;
+      services.clear();
+      Get.offAllNamed('/customer_home');
     } catch (e) {
       try {
         if (appointmentId != null) {
@@ -296,11 +395,14 @@ class CustomerController extends GetxController {
             await employeeRef.update({'exceptions': updatedExceptions});
           }
         }
+        isLoading.value = false;
       } catch (rollbackError) {
         log('Rollback Error: $rollbackError');
+        isLoading.value = false;
       }
       log('Error creating appointment: $e');
       Get.snackbar('Error', 'Could not create the appointment: $e');
+      isLoading.value = false;
     }
   }
 
@@ -453,25 +555,36 @@ class CustomerController extends GetxController {
                 } else if (snapshot.data!.isEmpty) {
                   return const Center(child: Text('No available slots!'));
                 } else {
-                  return SizedBox(
-                    height: 300, // Constrain the height or use Expanded.
-                    child: ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(snapshot.data![index]),
-                          onTap: () {
-                            appointmentSummaryDialog(
-                              context,
-                              shopsInFirebase[selectedShopIndex.value]['name'],
-                              employeesInFirebase[employeeIndex]
-                                  ['employeeName'],
-                              snapshot.data![index],
-                            );
-                          },
-                        );
-                      },
-                    ),
+                  return Column(
+                    children: [
+                      Text('Select Time Slot',
+                          style: Theme.of(context).textTheme.headlineSmall),
+                      Divider(),
+                      SizedBox(
+                        height: 350,
+                        child: Scrollbar(
+                          child: ListView.builder(
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: Text(snapshot.data![index]),
+                                onTap: () {
+                                  Get.back();
+                                  appointmentSummaryDialog(
+                                    context,
+                                    shopsInFirebase[selectedShopIndex.value]
+                                        ['name'],
+                                    employeesInFirebase[employeeIndex]
+                                        ['employeeName'],
+                                    snapshot.data![index],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 }
               },
@@ -580,6 +693,26 @@ class CustomerController extends GetxController {
             ),
             child: Column(
               children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.purpleAccent.withValues(alpha: 0.3),
+                      width: 4,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 80,
+                    backgroundImage: imageUrl.value == ''
+                        ? AssetImage(
+                            'assets/images/login_screen/customer.jpeg',
+                          )
+                        : CachedNetworkImageProvider(
+                            imageUrl.value,
+                          ),
+                  ),
+                ),
+                Divider(),
                 Row(
                   children: [
                     Text(
