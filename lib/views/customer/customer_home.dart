@@ -1,5 +1,5 @@
 import 'package:barber_appointment/controllers/customer_controller.dart';
-import 'package:barber_appointment/controllers/profile_setup_controller.dart';
+import 'package:barber_appointment/widgets/appointment_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +8,6 @@ import 'package:get/get.dart';
 class CustomerHome extends StatelessWidget {
   CustomerHome({super.key});
 
-  final ProfileSetupController profileSetupController =
-      Get.find<ProfileSetupController>();
   final CustomerController customerController = Get.find<CustomerController>();
 
   @override
@@ -26,6 +24,14 @@ class CustomerHome extends StatelessWidget {
             child: Text('Error: ${snapshot.error}'),
           );
         } else {
+          final activeAppointments = customerController.appointmentsInFirebase
+              .where((appointment) => appointment['status'] == true)
+              .toList();
+
+          final previousAppointments = customerController.appointmentsInFirebase
+              .where((appointment) => appointment['status'] == false)
+              .toList();
+
           return Scaffold(
             appBar: AppBar(
               title: Text('Barber Appointment'),
@@ -70,91 +76,48 @@ class CustomerHome extends StatelessWidget {
             ),
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: ListView.builder(
-                itemCount: customerController.appointmentsInFirebase.length,
-                itemBuilder: (context, index) {
-                  final appointment =
-                      customerController.appointmentsInFirebase[index];
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${index + 1}. ',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                FutureBuilder<String>(
-                                  future: customerController
-                                      .fetchShopName(appointment['shopId']),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Text('Loading...');
-                                    } else if (snapshot.hasError) {
-                                      return Text('Error: ${snapshot.error}');
-                                    } else {
-                                      return Text(
-                                        snapshot.data ?? 'No Shop Found',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium,
-                                      );
-                                    }
-                                  },
-                                ),
-                                Divider(),
-                                FutureBuilder<String>(
-                                  future: customerController.fetchEmployeeName(
-                                      appointment['employeeId']),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Text('Loading...');
-                                    } else if (snapshot.hasError) {
-                                      return Text('Error: ${snapshot.error}');
-                                    } else {
-                                      return Text(
-                                        'Berber: ${snapshot.data}' ??
-                                            'No Employee Found',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall,
-                                      );
-                                    }
-                                  },
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                    'Date: ${customerController.formatFirebaseTimestamp(appointment['date'])}'),
-                                SizedBox(height: 10),
-                                ...[
-                                  SizedBox(height: 5),
-                                  Wrap(
-                                    spacing: 5.0,
-                                    runSpacing: 5.0,
-                                    children: List<Widget>.generate(
-                                      appointment['services'].length,
-                                      (skillIndex) => Text(
-                                        appointment['services'][skillIndex],
-                                      ),
-                                    ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    if (activeAppointments.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'Active Appointments',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
                                   ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          Text('₹ ${appointment['amount']}'),
-                        ],
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ...activeAppointments.map(
+                      (appointment) => AppointmentCard(
+                        appointment: appointment,
+                        isBarber: false,
                       ),
                     ),
-                  );
-                },
+                    if (previousAppointments.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'Previous Appointments',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ...previousAppointments
+                        .map((appointment) => AppointmentCard(
+                              appointment: appointment,
+                              isBarber: false,
+                            )),
+                  ],
+                ),
               ),
             ),
           );

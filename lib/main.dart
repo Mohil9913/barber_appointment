@@ -1,5 +1,4 @@
 import 'package:barber_appointment/binding/initial_binding.dart';
-import 'package:barber_appointment/controllers/login_controller.dart';
 import 'package:barber_appointment/firebase_options.dart';
 import 'package:barber_appointment/views/barber/add_shop.dart';
 import 'package:barber_appointment/views/barber/barber_home.dart';
@@ -11,8 +10,8 @@ import 'package:barber_appointment/views/customer/customer_home.dart';
 import 'package:barber_appointment/views/customer/new_appointment.dart';
 import 'package:barber_appointment/views/customer/select_employee.dart';
 import 'package:barber_appointment/views/customer/select_service.dart';
+import 'package:barber_appointment/widgets/launcher_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -32,8 +31,10 @@ class RunApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData.dark(),
-      initialBinding: InitialBinding(), // Ensures all controllers are bound
+      initialBinding: InitialBinding(),
+      initialRoute: '/launch',
       getPages: [
+        GetPage(name: '/launch', page: () => LauncherScreen()),
         GetPage(name: '/login_screen', page: () => LoginScreen()),
         GetPage(name: '/user_selection', page: () => UserTypeSelection()),
         GetPage(name: '/profile_setup', page: () => ProfileSetup()),
@@ -45,34 +46,6 @@ class RunApp extends StatelessWidget {
         GetPage(name: '/select_service', page: () => SelectService()),
         GetPage(name: '/select_employee', page: () => SelectEmployee()),
       ],
-      home: FutureBuilder<void>(
-        future: Future.delayed(
-            Duration.zero, () => Get.find<LoginController>().checkIfExist()),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(
-              body: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CupertinoActivityIndicator(),
-                    SizedBox(width: 10),
-                    Text('Connecting Server please wait...'),
-                  ],
-                ),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Scaffold(
-              body: Center(
-                child: Text('Error: ${snapshot.error}'),
-              ),
-            );
-          } else {
-            return SizedBox.shrink();
-          }
-        },
-      ),
     );
   }
 }

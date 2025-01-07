@@ -33,12 +33,6 @@ class CustomerController extends GetxController {
   RxInt totalAmount = RxInt(0);
   RxInt totalTimeSlots = RxInt(0);
 
-  // @override
-  // void onInit() {
-  //   fetchCustomerDetails();
-  //   super.onInit();
-  // }
-
   void cacheProfileImage() {
     if (imageUrl.value.isNotEmpty) {
       try {
@@ -121,7 +115,7 @@ class CustomerController extends GetxController {
 
         if (serviceDoc.exists) {
           var serviceData = serviceDoc.data() as Map<String, dynamic>;
-          if (serviceData != null && serviceData.isNotEmpty) {
+          if (serviceData.isNotEmpty) {
             if (serviceData['serviceStatus'] == true) {
               servicesIdInFirebase.add(serviceDoc.id);
               servicesInFirebase.add(serviceData);
@@ -286,11 +280,10 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> createAppointment({
-    required String shopId,
-    required String employeeId,
-    required String timeSlot,
-  }) async {
+  Future<void> createAppointment(
+      {required String shopId,
+      required String employeeId,
+      required String timeSlot}) async {
     isLoading.value = true;
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     WriteBatch batch = firestore.batch();
@@ -777,7 +770,7 @@ class CustomerController extends GetxController {
                       width: 10,
                     ),
                     Obx(
-                      () => Text('${appointmentsIdInFirebase!.length}'),
+                      () => Text('${appointmentsIdInFirebase.length}'),
                     ),
                   ],
                 ),

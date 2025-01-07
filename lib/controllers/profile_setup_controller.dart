@@ -40,7 +40,7 @@ class ProfileSetupController extends GetxController {
   Future<String?> uploadImageToBucket() async {
     userNumber = FirebaseAuth.instance.currentUser!.phoneNumber;
     final bucketName =
-        userType.value == 'barber' ? 'shop_images' : 'customer_images';
+        userType.value == 'barber' ? 'barber_images' : 'customer_images';
     try {
       if (selectedImage.value == null) {
         Get.snackbar('Error', 'No image selected to upload.');
