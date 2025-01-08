@@ -7,12 +7,33 @@ class NewAppointment extends StatelessWidget {
   NewAppointment({super.key});
 
   final CustomerController customerController = Get.find();
+  final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Select Nearby Shop'),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(60.0),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Search shops...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              onChanged: (value) {
+                customerController.filterShops(value);
+              },
+            ),
+          ),
+        ),
       ),
       body: FutureBuilder(
         future: customerController.fetchShops(),
@@ -28,11 +49,9 @@ class NewAppointment extends StatelessWidget {
           } else {
             return Obx(
               () {
-                if (customerController.shopsInFirebase.isEmpty) {
+                if (customerController.shopsSortedByDistance.isEmpty) {
                   return const Center(
-                    child: Text(
-                      'No shops nearby!',
-                    ),
+                    child: Text('No shops found!'),
                   );
                 }
                 return customerController.isLoading.value
@@ -40,37 +59,37 @@ class NewAppointment extends StatelessWidget {
                     : Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListView.builder(
-                          itemCount: customerController.shopsInFirebase.length,
+                          itemCount:
+                              customerController.shopsSortedByDistance.length,
                           itemBuilder: (context, index) {
                             final shop =
-                                customerController.shopsInFirebase[index];
+                                customerController.shopsSortedByDistance[index];
                             return Card(
                               child: InkWell(
                                 onTap: () {
                                   customerController.selectedShopIndex.value =
-                                      index;
+                                      customerController.shopsInFirebase
+                                          .indexOf(shop);
                                   Get.toNamed('/select_service');
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(15.0),
-                                  child: Expanded(
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          '${index + 1}. ',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge,
-                                        ),
-                                        Text(
-                                          textAlign: TextAlign.left,
-                                          shop['name'],
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge,
-                                        ),
-                                      ],
-                                    ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '${index + 1}. ',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge,
+                                      ),
+                                      Text(
+                                        textAlign: TextAlign.left,
+                                        '${shop['name']} | ${shop['distance']} away',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),

@@ -1,4 +1,4 @@
-package com.example.barber_appointment;
+package com.example.barber;
 
 import io.flutter.embedding.android.FlutterActivity;
 

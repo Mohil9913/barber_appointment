@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -17,7 +18,9 @@ class CustomerController extends GetxController {
   RxInt age = RxInt(0);
   RxList userAppointments = RxList([]);
   var isLoading = false.obs;
+  var searchQuery = ''.obs;
 
+  RxList shopsSortedByDistance = RxList();
   RxList shopsInFirebase = RxList();
   RxList shopsIdInFirebase = RxList();
   RxList employeesInFirebase = RxList();
@@ -80,9 +83,66 @@ class CustomerController extends GetxController {
     return TimeOfDay(hour: hour, minute: minute);
   }
 
+  Future<Position> _getCurrentPosition() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Location services are disabled.');
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permissions are denied.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception(
+          'Location permissions are permanently denied. We cannot request permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
+    );
+  }
+
+  String formatDistance(double distanceInMeters) {
+    if (distanceInMeters >= 1000) {
+      // Convert to kilometers and round to 2 decimal places
+      return '${(distanceInMeters / 1000).toStringAsFixed(2)} km';
+    } else {
+      // Show distance in meters
+      return '${distanceInMeters.toStringAsFixed(0)} m';
+    }
+  }
+
+  void filterShops(String query) {
+    searchQuery.value = query;
+
+    if (query.isEmpty) {
+      shopsSortedByDistance.value = [...shopsInFirebase];
+      shopsSortedByDistance
+          .sort((a, b) => a['distance'].compareTo(b['distance']));
+    } else {
+      final filteredShops = shopsInFirebase
+          .where((shop) =>
+              shop['name'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
+
+      shopsSortedByDistance.value =
+          filteredShops.isNotEmpty ? filteredShops : [...shopsSortedByDistance];
+    }
+
+    log('\n\nFirebase : $shopsInFirebase\n\nFilter : $shopsSortedByDistance');
+  }
+
   Future<void> fetchShops() async {
-    shopsInFirebase.clear();
-    shopsIdInFirebase.clear();
+    shopsInFirebase.value = [];
+    shopsIdInFirebase.value = [];
+
+    Position userPosition = await _getCurrentPosition();
+    log('$userPosition');
 
     try {
       QuerySnapshot shopSnapshot = await FirebaseFirestore.instance
@@ -94,6 +154,20 @@ class CustomerController extends GetxController {
           shopsIdInFirebase.add(doc.id);
           return doc.data() as Map<String, dynamic>;
         }).toList();
+
+        for (var shop in shopsInFirebase) {
+          double distance = Geolocator.distanceBetween(
+            userPosition.latitude,
+            userPosition.longitude,
+            double.parse(shop['location']['lat']),
+            double.parse(shop['location']['long']),
+          );
+          shop['distance'] = formatDistance(distance);
+        }
+
+        shopsSortedByDistance.value = [...shopsInFirebase];
+        shopsSortedByDistance
+            .sort((a, b) => a['distance'].compareTo(b['distance']));
       }
     } catch (e) {
       Get.snackbar('Error Fetching shops', '$e');

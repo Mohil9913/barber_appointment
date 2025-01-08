@@ -177,6 +177,7 @@ class LoginController extends GetxController {
         },
         verificationFailed: (FirebaseAuthException e) {
           isPhoneNumberTextFieldVisible.value = true;
+          log('Failed to verify: $e');
           Get.snackbar('Error', e.message ?? 'Verification Failed');
           isLoading.value = false;
         },

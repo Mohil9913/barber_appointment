@@ -13,7 +13,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="Barber Appointment">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.barber.MainActivity"
             android:allowBackup="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:exported="true"

@@ -11,6 +11,7 @@ import 'package:barber_appointment/views/customer/new_appointment.dart';
 import 'package:barber_appointment/views/customer/select_employee.dart';
 import 'package:barber_appointment/views/customer/select_service.dart';
 import 'package:barber_appointment/widgets/launcher_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -20,7 +21,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
+  FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
   runApp(RunApp());
 }
 
