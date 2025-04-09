@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class AppointmentCard extends StatelessWidget {
-  AppointmentCard(
-      {super.key, required this.appointment, required this.isBarber});
+  AppointmentCard({
+    super.key,
+    required this.appointment,
+    required this.isBarber,
+  });
 
   final appointment;
   final isBarber;

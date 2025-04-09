@@ -50,8 +50,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCI1agsH3M_dSH9HXq6TtsKRk1sIrCZAcY',
-    appId: '1:789440799203:android:f304dc0a246387def580d6',
+    apiKey: 'AIzaSyB0Qr9nhiudNpskkTQssQRN4CIgHT4J4T8',
+    appId: '1:789440799203:android:69949cf16640b678f580d6',
     messagingSenderId: '789440799203',
     projectId: 'barber-appointment-94d83',
     storageBucket: 'barber-appointment-94d83.firebasestorage.app',

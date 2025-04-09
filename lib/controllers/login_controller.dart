@@ -164,10 +164,10 @@ class LoginController extends GetxController {
   }
 
   Future<void> sendOtp(String? phoneNumber) async {
-    isPhoneNumberTextFieldVisible.value = false;
-    isLoading.value = true;
-
     try {
+      isPhoneNumberTextFieldVisible.value = false;
+      isLoading.value = true;
+
       await _auth.verifyPhoneNumber(
         phoneNumber: '+91$phoneNumber',
         timeout: const Duration(seconds: 60),
@@ -176,8 +176,8 @@ class LoginController extends GetxController {
           redirectUser();
         },
         verificationFailed: (FirebaseAuthException e) {
+          log('Verification Failed. Code: ${e.code}, Message: ${e.message}'); // Add this log
           isPhoneNumberTextFieldVisible.value = true;
-          log('Failed to verify: $e');
           Get.snackbar('Error', e.message ?? 'Verification Failed');
           isLoading.value = false;
         },
@@ -195,7 +195,8 @@ class LoginController extends GetxController {
         },
       );
     } catch (e) {
-      Get.snackbar('Invalid OTP', 'Please enter the correct OTP');
+      log('Error in sendOtp: $e'); // Add this log
+      Get.snackbar('Error', 'Failed to send OTP: $e');
       isLoading.value = false;
     }
   }

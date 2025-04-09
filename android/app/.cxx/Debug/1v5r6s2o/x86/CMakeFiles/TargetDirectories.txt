@@ -1,0 +1,2 @@
+/Users/mohilmokaria/StudioProjects/barber_appointment/android/app/.cxx/Debug/1v5r6s2o/x86/CMakeFiles/edit_cache.dir
+/Users/mohilmokaria/StudioProjects/barber_appointment/android/app/.cxx/Debug/1v5r6s2o/x86/CMakeFiles/rebuild_cache.dir
